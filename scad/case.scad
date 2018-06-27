@@ -15,10 +15,11 @@ uno_z=30;
 /* %uno();
 %shield(); */
 
-demo(a=45);
+/* demo(a=45); */
 
-/* box();
-lid1(); */
+/* barrier(); */
+/* box(); */
+/* lid1(); */
 /* box2();
 box3(); */
 
@@ -28,6 +29,7 @@ box3(); */
 grove_module_holder(x=2); */
 
 /* !joystick_setup(); */
+/* %joystick_cap(); */
 
 module demo(a=0) {
   translate([0, y-y1-2+w/2, -z1+w]) {
@@ -42,9 +44,34 @@ module demo(a=0) {
   }
 }
 
+module border() {
+  translate([-x1-w*2,-y+y1+w*2,z1-w*3]) {
+    difference() {
+      hull() {
+        cube(size=[x+x1+w*2, y-w, w*4], center=false);
+        translate([w, w, w*4]) {
+          cube(size=[x+x1, y-w*3, w], center=false);
+        }
+      }
+      translate([w, -w, -w]) {
+        cube(size=[x+x1, y-w, w*10], center=false);
+      }
+      hull() {
+        translate([0, -w, -w]) {
+          cube(size=[x+x1+w*2, y, w], center=false);
+        }
+        translate([w, -w, 0]) {
+          cube(size=[x+x1, y-w, w], center=false);
+        }
+      }
+    }
+  }
+}
+
 module lid1() {
   box2();
   box3();
+  border();
 }
 
 module hinge1() {
@@ -81,7 +108,7 @@ module hinge_inner(d=2) {
   $fn=16;
   translate([-x1-w-1, y1-y+w, z1-w]) {
     rotate([0, 90, 0]) {
-      cylinder(d=d, h=x+x1+2);
+      cylinder(d=d+0.01, h=x+x1+2);
     }
   }
 }
@@ -128,6 +155,29 @@ module box2() {
   }
   joystick_setup();
   hinge2();
+}
+
+module joystick_cap() {
+  /* translate([80, -23, 24]) {
+    rotate([-45, 0, 180]) {
+      translate([10, 0, 3+7.5-20]) { */
+        difference() {
+          union() {
+            translate([0, 0, 12.5]) {
+              sphere(d=12.5);
+            }
+            cylinder(d=12.5, h=12.5);
+            cylinder(d=19, h=9);
+          }
+          translate([0, 0, 12.5]) {
+            sphere(d=10);
+          }
+          cylinder(d=10, h=12.5);
+          cylinder(d=20, h=8);
+        }
+      /* }
+    }
+  } */
 }
 
 module block2(x=x,y=y-y1,z=z2) {
@@ -189,6 +239,7 @@ module box(x=x,y=y,z=z1) {
     }
     hinge();
     hinge_inner();
+    cutout();
   }
   /* hull() {
     translate([60, -4, 0]) {
@@ -221,10 +272,45 @@ module box(x=x,y=y,z=z1) {
   hinge1();
 }
 
+module cutout() {
+  translate([-x1-w*2, 0, w*2]) {
+    cube(size=[10, 20, z1], center=false);
+  }
+}
+
+module barrier() {
+  difference() {
+    translate([-x1-w, 0, w*2]) {
+      cube(size=[w, 20, z1-w*3], center=false);
+      translate([-w, -w*2, -w*2]) {
+        cube(size=[w*3,20+w*4,z1-w*3], center=false);
+      }
+    }
+    cutout2(0);
+    cutout2(180);
+    box();
+  }
+}
+
+module cutout2(a=180) {
+  translate([-x1-w/2, 10, w*3]) {
+    rotate(a) {
+      translate([-w*2.5, -10+w, 0]) {
+        hull() {
+          cube(size=[w,20-w*2,z1], center=false);
+          translate([w, w, w]) {
+            cube(size=[w,20-w*4,z1], center=false);
+          }
+        }
+      }
+    }
+  }
+}
+
 module relais() {
-  translate([85, 40, 0]) {
-    rotate(-90) {
-      %grove_module(x=2);
+  translate([85, 20, 0]) {
+    rotate(90) {
+      %grove_module(x=2,pos=0);
       grove_module_holder(x=2);
     }
   }
@@ -233,6 +319,9 @@ module relais() {
 module display_display(z=2) {
   translate([11/2+10, 4/2, 2/2]) {
     cube(size=[25, 15, z],center=true);
+    translate([-0.5, -4/2, 5]) {
+      cube(size=[28, 20, z],center=true);
+    }
   }
 }
 
@@ -263,12 +352,18 @@ module joystick_setup() {
                 }
               }
             }
+            translate([10, 0, 3]) {
+              %joystick_cap();
+            }
           }
           %translate([10, 0, 3+7.5]) {
             /* cylinder(d=17, h=30); */
             cube(size=[15, 15, 15], center=true);
             translate([0, 0, 23/2-7.5]) {
               cube(size=[2, 2, 22], center=true);
+              translate([0, 0, 2]) {
+                include <knob.scad>;
+              }
             }
           }
         }
@@ -287,7 +382,7 @@ module grove_module_holder(x=1,y=1,flat=0,h=3) {
       }
     }
     translate([10, 0, -h]) {
-      cube(size=[20*(x-1), 10*y, 3*h], center=true);
+      cube(size=[20*(x-1), 10*y, 3*h+20], center=true);
     }
   }
 }
@@ -304,7 +399,7 @@ module grove_module_base_holder(h=3) {
     difference() {
       cylinder(r=2.5, h=h);
       translate([0, 0, h-2]) {
-        cylinder(d=1, h=5, center=true);
+        cylinder(d=2, h=5, center=true);
       }
     }
   }
@@ -312,7 +407,7 @@ module grove_module_base_holder(h=3) {
     difference() {
       cylinder(r=2.5, h=h);
       translate([0, 0, h-2]) {
-        cylinder(d=1, h=5, center=true);
+        cylinder(d=2, h=5, center=true);
       }
     }
   }
@@ -321,7 +416,8 @@ module grove_module_base_holder(h=3) {
 module grove_module(
           x=1,
           y=1,/* no effect yet */
-          flat=0
+          flat=0,
+          pos=1
 ) {
   translate([0, 0, 3]) {
     for (i=[0:x-1]) {
@@ -334,7 +430,7 @@ module grove_module(
       }
     }
 
-    translate([20*x-10-4-flat*x*20+flat*5, 10*y/2-5, flat*4]) {
+    translate([(20*x-10)*pos-4-flat*x*20+flat*5, 10*y/2-5, flat*4]) {
       rotate([0, 90*flat, 0]) {
         color("white",0.6) grove_con();
       }
