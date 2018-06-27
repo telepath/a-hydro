@@ -1,5 +1,10 @@
+#ifndef CONFIG_H
+#define CONFIG_H
+
 int pumpPin = 3;
 int waterPin = 2;
+int joyXPin = A0;
+int joyYPin = A1;
 int waterTimeout = 5;
 
 // int pumpOnHours = 1;
@@ -13,4 +18,4 @@ int pumpOnSeconds = 60 * pumpOnMinutes;
 
 int displayUpdate = 250; //ms
 
-unsigned char menuIndicator = '>';
+#endif
