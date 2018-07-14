@@ -2,6 +2,7 @@
 
 MenuRenderer menu_renderer;
 MenuSystem ms(menu_renderer);
+Menu mu_pump("Pump");
 
 void pump_controller_onTrue(int idx, int v, int up){
   // display.setInverseDisplay();
@@ -53,16 +54,33 @@ void pumpOff_onTimer(int idx, int v, int up){
 
 void display_onTimer(int idx, int v, int up){
   // drawDisplay();
+  char string[15];
+  if (pump_bit.state() == 1) {
+    sprintf(string, "%-9s%5d", "PumpOff:", pumpOff_timer.left() / 1000);
+    mu_pump.set_name(string);
+  } else {
+    sprintf(string, "%-9s%5d", "PumpOn:", pumpOn_timer.left() / 1000);
+    mu_pump.set_name(string);
+  }
   ms.display();
 }
 
+// void joystick_onUp(/* arguments */) {
+//   Serial.println("joystick_onUp");
+//   upBtn_button.event(upBtn_button.EVT_PRESS);
+// }
+//
+// void upBtn_onPress( int idx, int v, int up ) {
+//   ms.prev(true);
+// }
+
 void joystick_onUp(/* arguments */) {
   Serial.println("joystick_onUp");
-  ms.prev(true);
+  ms.prev(false);
 }
 void joystick_onDown(/* arguments */) {
   Serial.println("joystick_onDown");
-  ms.next(true);
+  ms.next(false);
 }
 void joystick_onLeft(/* arguments */) {
   Serial.println("joystick_onLeft");
@@ -75,6 +93,9 @@ void joystick_onRight(/* arguments */) {
 void joystick_onPush(/* arguments */) {
   Serial.println("joystick_onPush");
   // ms.select();
+}
+void joystick_reset(/* arguments */) {
+  // upBtn_button.event(upBtn_button.EVT_RELEASE);
 }
 void joystick_onChange( int idx, int v, int up ) {
   if (idx == (int)'x' && v == 0 && up == false) {
@@ -92,23 +113,9 @@ void joystick_onChange( int idx, int v, int up ) {
   else if (idx == (int)'y' && v == 1 && up == true) {
     joystick_onUp();
   }
-}
-
-void setup_menu(/* arguments */) {
-  menu_renderer.setup_display();
-
-  Menu mu_pump("Pump");
-  Menu mu_water("Water Sensor");
-  ms.get_root_menu().add_menu(&mu_pump);
-  ms.get_root_menu().add_menu(&mu_water);
-  NumericMenuItem nmi_pumpOn("ON timer", &mu_pumpOn_onSelect, (float)pumpOnSeconds, 60.0, 604800.0, 30.0);
-  mu_pump.add_item(&nmi_pumpOn);
-  NumericMenuItem nmi_pumpOff("OFF timer", &mu_pumpOff_onSelect, (float)pumpOffSeconds, 10.0, 3600.0, 5.0);
-  mu_pump.add_item(&nmi_pumpOff);
-  // mu_pump.add_item(&MenuItem("Reset",&mu_pump_reset_onSelect));
-  // mu_pump.add_item(&MenuItem("Test",&mu_pump_test_onSelect));
-  // mu_water.add_item(&MenuItem("enable",&mu_water_enable_onSelect));
-  // mu_water.add_item(&MenuItem("simulate",&mu_water_simulate_onSelect));
+  else if (v=0 && up == false){
+    joystick_reset();
+  }
 }
 
 void mu_pumpOn_onSelect(NumericMenuItem* p_menu_component){
@@ -144,8 +151,17 @@ void setup() {
   // display.setNormalDisplay();
   // display.setPageMode();
   // drawDisplay();
-  setup_menu();
-  ms.display();
+  // setup menu
+  menu_renderer.setup_display();
+
+  Menu mu_water("Water Sensor");
+  ms.get_root_menu().add_menu(&mu_pump);
+  ms.get_root_menu().add_menu(&mu_water);
+  NumericMenuItem nmi_pumpOn("ON timer", &mu_pumpOn_onSelect, (float)pumpOnSeconds, 60.0, 604800.0, 30.0);
+  mu_pump.add_item(&nmi_pumpOn);
+  NumericMenuItem nmi_pumpOff("OFF timer", &mu_pumpOff_onSelect, (float)pumpOffSeconds, 10.0, 3600.0, 5.0);
+  mu_pump.add_item(&nmi_pumpOff);
+  // ms.display();
 
   //setup pump relay
   pump_relais.begin(pumpPin);
@@ -158,6 +174,7 @@ void setup() {
     .interval_seconds(pumpOnSeconds)
     .repeat(-1)
     .onTimer(pumpOn_onTimer)
+    // .onChange(pumpOn_onChange)
     .start();
 
   //setup pump stop timer
