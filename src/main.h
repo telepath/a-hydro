@@ -12,6 +12,7 @@
 
 Atm_led pump_relais;
 Atm_bit pump_bit;
+Atm_bit pump_test_bit;
 // Atm_digital water_sensor;
 // Atm_button water_sensor;
 // Atm_analog water_sensor;

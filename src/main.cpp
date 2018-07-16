@@ -129,9 +129,16 @@ void mu_pumpOff_onSelect(NumericMenuItem* p_menu_component){
 // void mu_pump_reset_onSelect(MenuComponent* p_menu_component){
 //
 // }
-// void mu_pump_test_onSelect(MenuComponent* p_menu_component){
-//
-// }
+void mi_pumpTest_onSelect(MenuComponent* p_menu_component){
+  pump_test_bit.toggle();
+  if (pump_test_bit.state()) {
+    pumpOn_timer.trigger(pumpOn_timer.EVT_STOP);
+    p_menu_component->set_name("Test (ON)");
+  } else {
+    pumpOn_timer.trigger(pumpOn_timer.EVT_START);
+    p_menu_component->set_name("Test (OFF)");
+  }
+}
 void mu_water_enable_onSelect(MenuComponent* p_menu_component){
 
 }
@@ -161,6 +168,8 @@ void setup() {
   mu_pump.add_item(&nmi_pumpOn);
   NumericMenuItem nmi_pumpOff("OFF timer", &mu_pumpOff_onSelect, (float)pumpOffSeconds, 10.0, 3600.0, 5.0);
   mu_pump.add_item(&nmi_pumpOff);
+  MenuItem mi_pumpTest("Test", &mi_pumpTest_onSelect);
+  mu_pump.add_item(&mi_pumpTest);
   // ms.display();
 
   //setup pump relay
@@ -168,6 +177,8 @@ void setup() {
 
   //setup pump bit
   pump_bit.begin();
+
+  pump_test_bit.begin();
 
   //setup pump start timer
   pumpOn_timer.begin()
@@ -197,6 +208,7 @@ void setup() {
   pump_controller.begin()
     .IF(pump_bit)
     // .AND(water_sensor)
+    .OR(pump_test_bit)
     .onChange(true, pump_controller_onTrue)
     .onChange(false, pump_controller_onFalse);
 
