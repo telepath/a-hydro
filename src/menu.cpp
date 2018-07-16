@@ -1,6 +1,7 @@
 #include "menu.h"
 
 unsigned char menuIndicator = '>';
+int num_display_lines = 8;
 SeeedOLED display;
 
 void MenuRenderer::render(Menu const& menu) const {
@@ -16,6 +17,10 @@ void MenuRenderer::render(Menu const& menu) const {
       }
       display.setTextXY(i,1);
       cp_m_comp->render(*this);
+  }
+  for (int i = menu.get_num_components(); i < num_display_lines-1; i++) {
+    display.setTextXY(i,0);
+    display.putString("               ");
   }
 };
 
@@ -36,7 +41,8 @@ void MenuRenderer::render_numeric_menu_item(NumericMenuItem const& menu_item) co
   // Serial.print(": ");
   // Serial.println(menu_item.get_value());
   char string[15];
-  sprintf(string, "%-9s%5d", menu_item.get_name(), (int)menu_item.get_value());
+  unsigned int value = menu_item.get_value();
+  sprintf(string, "%-9s%5u ", menu_item.get_name(), value);
   display.putString(string);
 };
 

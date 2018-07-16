@@ -55,11 +55,15 @@ void pumpOff_onTimer(int idx, int v, int up){
 void display_onTimer(int idx, int v, int up){
   // drawDisplay();
   char string[15];
+  unsigned int left;
+  char format[] = "%-9s%5u ";
   if (pump_bit.state() == 1) {
-    sprintf(string, "%-9s%5d", "PumpOff:", pumpOff_timer.left() / 1000);
+    left = pumpOff_timer.left() / 1000;
+    sprintf(string, format, "PumpOff:", left);
     mu_pump.set_name(string);
   } else {
-    sprintf(string, "%-9s%5d", "PumpOn:", pumpOn_timer.left() / 1000);
+    left = pumpOn_timer.left() / 1000;
+    sprintf(string, format, "PumpOn:", left);
     mu_pump.set_name(string);
   }
   ms.display();
@@ -113,8 +117,8 @@ void joystick_onChange( int idx, int v, int up ) {
   else if (idx == (int)'y' && v == 1 && up == true) {
     joystick_onUp();
   }
-  else if (v=0 && up == false){
-    joystick_reset();
+  else if (v == 0 && up == false){
+    joystick_onPush();
   }
 }
 
@@ -146,6 +150,12 @@ void mu_water_simulate_onSelect(MenuComponent* p_menu_component){
 
 }
 
+String nmi_pumpOn_format(float value) {
+  char string[15];
+  sprintf(string, "%5.0f ", value);
+  return String(string);
+}
+
 void setup() {
   Wire.begin();
 
@@ -164,9 +174,10 @@ void setup() {
   Menu mu_water("Water Sensor");
   ms.get_root_menu().add_menu(&mu_pump);
   ms.get_root_menu().add_menu(&mu_water);
-  NumericMenuItem nmi_pumpOn("ON timer", &mu_pumpOn_onSelect, (float)pumpOnSeconds, 60.0, 604800.0, 30.0);
+  // NumericMenuItem(const char *name, SelectFnPtr select_fn, float value, float min_value, float max_value, optional float increment, optional FormatValueFnPtr format_value_fn)
+  NumericMenuItem nmi_pumpOn("ON timer", &mu_pumpOn_onSelect, pumpOnSeconds, -60.0, 604800.0, 30.0, &nmi_pumpOn_format);
   mu_pump.add_item(&nmi_pumpOn);
-  NumericMenuItem nmi_pumpOff("OFF timer", &mu_pumpOff_onSelect, (float)pumpOffSeconds, 10.0, 3600.0, 5.0);
+  NumericMenuItem nmi_pumpOff("OFF timer", &mu_pumpOff_onSelect, pumpOffSeconds, -10.0, 3600.0, 5.0, &nmi_pumpOn_format);
   mu_pump.add_item(&nmi_pumpOff);
   MenuItem mi_pumpTest("Test", &mi_pumpTest_onSelect);
   mu_pump.add_item(&mi_pumpTest);
@@ -182,7 +193,7 @@ void setup() {
 
   //setup pump start timer
   pumpOn_timer.begin()
-    .interval_seconds(pumpOnSeconds)
+    .interval_seconds((uint32_t)pumpOnSeconds)
     .repeat(-1)
     .onTimer(pumpOn_onTimer)
     // .onChange(pumpOn_onChange)
@@ -190,7 +201,7 @@ void setup() {
 
   //setup pump stop timer
   pumpOff_timer.begin()
-    .interval_seconds(pumpOffSeconds)
+    .interval_seconds((uint32_t)pumpOffSeconds)
     .onTimer(pumpOff_onTimer);
 
   display_timer.begin()
