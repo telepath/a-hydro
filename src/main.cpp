@@ -55,15 +55,12 @@ void pumpOff_onTimer(int idx, int v, int up){
 void display_onTimer(int idx, int v, int up){
   // drawDisplay();
   char string[15];
-  unsigned int left;
-  char format[] = "%-9s%5u ";
+  char left[7];
   if (pump_bit.state() == 1) {
-    left = pumpOff_timer.left() / 1000;
-    sprintf(string, format, "PumpOff:", left);
+    sprintf(string, "%-9s%5s ", "PumpOff:", dtostrf(pumpOff_timer.left() / 1000.0, 5, 0, left));
     mu_pump.set_name(string);
   } else {
-    left = pumpOn_timer.left() / 1000;
-    sprintf(string, format, "PumpOn:", left);
+    sprintf(string, "%-9s%5sh", "PumpOn:", dtostrf(pumpOn_timer.left() / 1000.0 / 60.0 / 60.0, 3, 2, left));
     mu_pump.set_name(string);
   }
   ms.display();
@@ -152,7 +149,14 @@ void mu_water_simulate_onSelect(MenuComponent* p_menu_component){
 
 String nmi_pumpOn_format(float value) {
   char string[15];
-  sprintf(string, "%5.0f ", value);
+  char string2[15];
+  sprintf(string, "%5sh", dtostrf(value/60.0/60.0, 0, 1, string2));
+  return String(string);
+}
+String nmi_pumpOff_format(float value) {
+  char string[15];
+  char string2[15];
+  sprintf(string, "%5ss", dtostrf(value, 0, 1, string2));
   return String(string);
 }
 
@@ -175,9 +179,9 @@ void setup() {
   ms.get_root_menu().add_menu(&mu_pump);
   ms.get_root_menu().add_menu(&mu_water);
   // NumericMenuItem(const char *name, SelectFnPtr select_fn, float value, float min_value, float max_value, optional float increment, optional FormatValueFnPtr format_value_fn)
-  NumericMenuItem nmi_pumpOn("ON timer", &mu_pumpOn_onSelect, pumpOnSeconds, -60.0, 604800.0, 30.0, &nmi_pumpOn_format);
+  NumericMenuItem nmi_pumpOn("ON timer", &mu_pumpOn_onSelect, pumpOnSeconds, 60.0, 604800.0, -30.0*60.0, &nmi_pumpOn_format);
   mu_pump.add_item(&nmi_pumpOn);
-  NumericMenuItem nmi_pumpOff("OFF timer", &mu_pumpOff_onSelect, pumpOffSeconds, -10.0, 3600.0, 5.0, &nmi_pumpOn_format);
+  NumericMenuItem nmi_pumpOff("OFF timer", &mu_pumpOff_onSelect, pumpOffSeconds, 10.0, 3600.0, -5.0, &nmi_pumpOff_format);
   mu_pump.add_item(&nmi_pumpOff);
   MenuItem mi_pumpTest("Test", &mi_pumpTest_onSelect);
   mu_pump.add_item(&mi_pumpTest);
@@ -234,6 +238,11 @@ void setup() {
     .threshold(joy_threshold_list, sizeof(joy_threshold_list) )
     .onChange(true, joystick_onChange, (int)'y' )
     .onChange(false, joystick_onChange, (int)'y' );
+
+  // upBtn_button.begin(upBtnPin)
+  //   .onPress(upBtn_onPress)
+  //   .trace(Serial)
+  //   .repeat();
 }
 
 void loop() {

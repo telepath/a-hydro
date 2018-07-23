@@ -41,8 +41,7 @@ void MenuRenderer::render_numeric_menu_item(NumericMenuItem const& menu_item) co
   // Serial.print(": ");
   // Serial.println(menu_item.get_value());
   char string[15];
-  unsigned int value = menu_item.get_value();
-  sprintf(string, "%-9s%5u ", menu_item.get_name(), value);
+  sprintf(string, "%-9s%5s ", menu_item.get_name(), &menu_item.get_formatted_value()[0]);
   display.putString(string);
 };
 
