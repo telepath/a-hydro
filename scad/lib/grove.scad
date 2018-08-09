@@ -1,3 +1,8 @@
+use <lib/MCAD/regular_shapes.scad>
+
+OLED_JOY="oled_joy";
+TOUCH_DISPLAY="touch_display";
+
 module grove_module_holder(x=1,y=1,flat=0,h=3) {
   difference() {
     for (i=[0:x-1]) {
@@ -34,8 +39,8 @@ module grove_module_base_holder(h=3) {
     difference() {
       cylinder(r=2.5, h=h);
       translate([0, 0, h-2]) {
-        /* cylinder(d=2, h=5, center=true); */
-        boltHole(size=2,length=h);
+        cylinder(d=1.6, h=h*2, center=true);
+        /* boltHole(size=2,length=h); */
       }
     }
   }
@@ -104,27 +109,43 @@ module grove_module_base() {
   }
 }
 
-module joystick_cap() {
-  /* translate([80, -23, 24]) {
-    rotate([-45, 0, 180]) {
-      translate([10, 0, 3+7.5-20]) { */
-        difference() {
-          union() {
-            translate([0, 0, 12.5]) {
-              sphere(d=12.5);
+module joystick_cap(
+  h=15,
+  h0=8,
+  d1=20,
+  d2=3,
+  w=0.5
+) {
+  $fn=24;
+  ht1=(h-h0-d2/2)*2+d2/2;
+  intersection() {
+    cylinder(d=d1, h=h-d2/2);
+
+    translate([0, 0, h-d2/2]) {
+      difference() {
+        union() {
+          difference() {
+            cylinder(d=d1, h=h0+w);
+            translate([0, 0, -w]) {
+              cylinder(d=d1+w, h=h0+w);
             }
-            cylinder(d=12.5, h=12.5);
-            cylinder(d=19, h=9);
           }
-          translate([0, 0, 12.5]) {
-            sphere(d=10);
-          }
-          cylinder(d=10, h=12.5);
-          cylinder(d=20, h=8);
+          torus(ht1+w,d2/2-w);
         }
-      /* }
+        torus(ht1,d2/2);
+      }
     }
-  } */
+  }
+  translate([0, 0, h-d2/2]) {
+    difference() {
+      sphere(d=d2);
+      sphere(d=d2-w*2);
+      translate([0, 0, -d2]) {
+        cylinder(d=d2-w*2, h=d2);
+      }
+      cylinder(d=1, h=10);
+    }
+  }
 }
 
 module relais() {
@@ -149,7 +170,12 @@ module display_setup() {
   /* translate([15, -23, 24]) {
     rotate([180+45, 0, 0]) { */
       %grove_module(x=2,flat=1); //display
-      grove_module_holder(x=2,flat=1);
+      difference() {
+        grove_module_holder(x=2,flat=1);
+        translate([0, 0, -3.5]) {
+          display_display(z=5);
+        }
+      }
       color("black") {
         %display_display();
       }
