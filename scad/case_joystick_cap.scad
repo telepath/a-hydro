@@ -1,3 +1,3 @@
-include <case.scad>
+include <lib/grove.scad>
 
 joystick_cap();

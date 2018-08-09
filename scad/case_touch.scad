@@ -1,7 +1,7 @@
 include <lib/case2.scad>
 
-board=UNO;
-inset=OLED_JOY;
+board=MEGA;
+inset=TOUCH_DISPLAY;
 
 translate([y+20,0,0])
 rotate(90)
