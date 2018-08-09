@@ -6,7 +6,7 @@
 #include <Automaton.h>
 #include <MenuSystem.h>
 
-
+#include "atm_vbutton.h"
 #include "menu.h"
 #include "config.h"
 
@@ -22,6 +22,7 @@ Atm_timer pumpOff_timer;
 Atm_timer display_timer;
 Atm_comparator joyX_comp;
 Atm_comparator joyY_comp;
+// Atm_button upBtn_button;
 
 void pump_controller_onTrue(int idx, int v, int up);
 

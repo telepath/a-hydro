@@ -1,0 +1,6 @@
+[submodule "scad/lib/MCAD"]
+	path = scad/lib/MCAD
+	url = https://github.com/openscad/MCAD.git
+[submodule "scad/lib/FreeCAD-library"]
+	path = scad/lib/FreeCAD-library
+	url = https://github.com/FreeCAD/FreeCAD-library.git

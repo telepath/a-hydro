@@ -179,7 +179,7 @@ void setup() {
   ms.get_root_menu().add_menu(&mu_pump);
   ms.get_root_menu().add_menu(&mu_water);
   // NumericMenuItem(const char *name, SelectFnPtr select_fn, float value, float min_value, float max_value, optional float increment, optional FormatValueFnPtr format_value_fn)
-  NumericMenuItem nmi_pumpOn("ON timer", &mu_pumpOn_onSelect, pumpOnSeconds, 60.0, 604800.0, -30.0*60.0, &nmi_pumpOn_format);
+  NumericMenuItem nmi_pumpOn("ON timer", &mu_pumpOn_onSelect, pumpOnSeconds, 60.0, 604800.0, -15.0*60.0, &nmi_pumpOn_format);
   mu_pump.add_item(&nmi_pumpOn);
   NumericMenuItem nmi_pumpOff("OFF timer", &mu_pumpOff_onSelect, pumpOffSeconds, 10.0, 3600.0, -5.0, &nmi_pumpOff_format);
   mu_pump.add_item(&nmi_pumpOff);

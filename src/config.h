@@ -9,11 +9,11 @@ int joyXPin = A0;
 int joyYPin = A1;
 int waterTimeout = 5;
 
-int pumpOnHours = 12;
+double pumpOnHours = 0.25;
 // int pumpOnMinutes = 60;
 // int pumpOffMinutes = 1;
 // int pumpOnSeconds =30;
-double pumpOffSeconds = 25;
+double pumpOffSeconds = 300;
 // int pumpOnSeconds = 60 * pumpOnMinutes;
 double pumpOnSeconds = pumpOnHours * 60.0 * 60.0;
 // int pumpOffSeconds = 60 * pumpOffMinutes;
