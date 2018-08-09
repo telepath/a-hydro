@@ -38,6 +38,7 @@ $(STL)/%.stl: %.scad
 $(IMG)/%.png: %.scad
 	mkdir -p $(IMG)
 	$(OPENSCAD) -m make -o $(@:.png=-`date '+%y-%m-%d-%H-%M-%S'`.png) --imgsize=2048,2048 --render -d $(DEPS)/`basename $@`.deps $< &
+	$(OPENSCAD) -m make -o $(@:.png=-`date '+%y-%m-%d-%H-%M-%S'-preview`.png) --imgsize=2048,2048 -d $(DEPS)/`basename $@`.deps $< &
 
 $(GCODE)/%.gcode: $(STL)/%.stl
 	mkdir -p $(GCODE)
