@@ -1,5 +1,8 @@
 include <MCAD/nuts_and_bolts.scad>
 
+UNO="uno";
+MEGA="mega";
+
 mega_x=101.52;
 mega_y=53.3;
 mega_z=15;
@@ -11,13 +14,13 @@ module mega() {
   x=101.52;
   y=53.3;
   translate([x/2, y/2, 3]) {
-    import("FreeCAD-library/Electrical Parts/boards/arduino-mega.stl");
+    import("lib/FreeCAD-library/Electrical Parts/boards/arduino-mega.stl");
   }
 }
 
 module uno() {
   translate([0, 0, 3]) {
-    import("FreeCAD-library/Electrical Parts/boards/freaduino-uno.stl");
+    import("lib/FreeCAD-library/Electrical Parts/boards/freaduino-uno.stl");
   }
 }
 
