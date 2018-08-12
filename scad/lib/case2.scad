@@ -6,7 +6,7 @@ include <vitamins.scad>
 //width
 w=1.5;
 
-x0=50;
+x0=47;
 x1=w;
 y0=w+35;
 y1=w;
@@ -34,7 +34,8 @@ module assembly(
   y=y,
   z=z,
   w=w,
-  g=g
+  g=g,
+  a=a
 ) {
   yh=di/2+g+w*2;
   hinge(
@@ -43,65 +44,259 @@ module assembly(
     w=w,
     x1=w*2,
     g=g,
-    di=di
+    di=di,
+    a=a
   );
   translate([0, yh, 0]) {
-    if (board==MEGA) {
-      box_mega(
-        x=x,
-        y=y,
-        z=z/2,
-        w=w,
-        di=di
-      );
+    union() {
+      if (board==MEGA) {
+        box_mega(
+          x=x,
+          y=y,
+          z=(z-w)/2,
+          w=w,
+          di=di
+        );
+      }
+      if (board==UNO) {
+        box_uno(
+          x=x,
+          y=y,
+          z=(z-w)/2,
+          w=w,
+          di=di
+        );
+      }
     }
-    if (board==UNO) {
-      box_uno(
-        x=x,
-        y=y,
-        z=z/2,
-        w=w,
-        di=di
-      );
+    translate([x/2, yh+y, w*2+g]) {
+      latch(x=x/10,di=w*2,w=w,g=g,a=a/2);
     }
-  }
-  translate([0,-yh-y,0]){
-    if (inset==OLED_JOY) {
-      box_oled_joy(
-        x=x,
-        y=y,
-        z=z/2,
-        w=w,
-        di=di
-      );
-    }
-    if (inset==TOUCH_DISPLAY) {
-      box_touch_display(
-        x=x,
-        y=y,
-        z=z/2,
-        w=w,
-        di=di
-      );
+   }
+  translate([0,0,z/2]){
+    rotate([a-180, 0, 0]) {
+      translate([0,-yh-y,-z/2]){
+        if (inset==OLED_JOY) {
+          box_oled_joy(
+            x=x,
+            y=y,
+            z=(z-w)/2,
+            w=w,
+            di=di
+          );
+        }
+        if (inset==TOUCH_DISPLAY) {
+          box_touch_display(
+            x=x,
+            y=y,
+            z=(z-w)/2,
+            w=w,
+            di=di
+          );
+        }
+      }
+      translate([w, -yh-y, w-z/2]) {
+        if (inset==OLED_JOY) {
+          inset_oled_joy(x=x,y=y,z=z-w,x0=x0,y0=y0);
+        }
+        if (inset==TOUCH_DISPLAY) {
+          inset_touch_display(x=x,y=y,z=z-w,x0=x0,y0=y0);
+        }
+      }
     }
   }
   translate([w, yh, w]) {
     if (board==MEGA) {
-      inset_mega(x0=x0,y0=y0);
+      inset_mega(x=x,y=y,z=z-w,x0=x0,y0=y0);
     }
     if (board==UNO) {
-      inset_uno(x0=x0,y0=y0);
-    }
-  }
-  translate([w, -yh-y, w]) {
-    if (inset==OLED_JOY) {
-      inset_oled_joy(x0=x0,y0=y0);
-    }
-    if (inset==TOUCH_DISPLAY) {
-      inset_touch_display(x0=x0,y0=y0);
+      inset_uno(x=x,y=y,z=z-w,x0=x0,y0=y0);
     }
   }
   hooks(x=x,y=y+yh,w=w);
+  translate([0, yh, 0]) {
+    %seal();
+  }
+}
+
+module seal(
+  x=x,
+  x0=x0,
+  y=y,
+  y0=y0,
+  z=z,
+  w=w,
+  g=g
+) {
+  di=w*2;
+  difference() {
+    translate([-w/2, -w/2, z/2-w*2]) {
+      difference() {
+        cube(size=[x+w, y+w, w*4]);
+        translate([w*2, w*2, -w]) {
+          cube(size=[x-w*3, y-w*3, w*6]);
+        }
+        rounded_border();
+      }
+    }
+    box_mega(
+      x=x,
+      x0=x0,
+      y=y,
+      y0=y0,
+      z=z/2,
+      w=w,
+      g=g,
+      di=di
+    );
+    translate([w, 0, w]) {
+      if (board==MEGA) {
+        inset_mega(x=x,y=y,z=z-w,x0=x0,y0=y0);
+      }
+      if (board==UNO) {
+        inset_uno(x=x,y=y,z=z-w,x0=x0,y0=y0);
+      }
+    }
+  }
+}
+
+module rounded_border() {
+  translate([w, 0, w*4]) {
+    rotate([-90, 0, 0]) {
+      clip_border(w=w,l=y,d=w*2.5);
+    }
+  }
+  translate([0, w, w*4]) {
+    rotate([0, 90, 0]) {
+      rotate(90) {
+        clip_border(w=w,l=x,d=w*2.5);
+      }
+    }
+  }
+  translate([x, y+w, w*4]) {
+    rotate([90, 0, 0]) {
+      rotate(180) {
+        clip_border(w=w,l=y,d=w*2.5);
+      }
+    }
+  }
+  translate([x+w, y, w*4]) {
+    rotate([0, -90, 0]) {
+      rotate(270) {
+        clip_border(w=w,l=x,d=w*2.5);
+      }
+    }
+  }
+}
+
+module clip_border(
+  w=w,
+  d=w*2.5,
+  l
+) {
+  difference() {
+    cylinder(d=w*2.5, h=l+w);
+    translate([-w, 0, 0]) {
+      rotate([0, 45, 0]) {
+        translate([0, -w*2.5, -w*5]) {
+          cube(size=[w*10, w*10, w*10]);
+        }
+      }
+    }
+    translate([-w*1.25, 0, l+w*1.25]) {
+      rotate([0, -45, 0]) {
+        translate([0, -w*2.5, -w*5]) {
+          cube(size=[w*10, w*10, w*10]);
+        }
+      }
+    }
+  }
+}
+
+module latch(
+  x=x/10,
+  di=w*2,
+  w=w,
+  g=g,
+  a=a/2
+) {
+  b=di+w+g;
+  c=x+(w+g)*2;
+  do=di+(g+w)*2;
+  e=do+w+di+w;
+
+  //latch hinge
+  rotate([0, 90, 0]) {
+    cylinder(d=di, h=c, center=true);
+  }
+  difference() {
+    union() {
+      translate([0, -b/2, 0]) {
+        cube(size=[c, b, do], center=true);
+      }
+        rotate([0, 90, 0]) {
+          cylinder(d=do, h=c, center=true);
+        }
+    }
+    translate([0, 0, 0]) {
+      cube(size=[x+g*2, do*2, do+w], center=true);
+    }
+  }
+
+  // latch
+  /* rotate([-a*0.95, 0, 0]) */
+  rotate([-a*0.08, 0, 0])
+  intersection() {
+    difference() {
+      union() {
+        rotate([0, 90, 0]) {
+          cylinder(d=do, h=x, center=true);
+        }
+        translate([-x/2, -do/2, 0]) {
+          cube(size=[x, do+w, z-w]);
+        }
+        translate([-x/2, -e+do/2, z-do/2+g]) {
+          cube(size=[x, e, do]);
+        }
+        latch_catch(
+          di=di,
+          x=x,
+          y=-e+do/2+w,
+          z=z-do/2+w-g/2
+        );
+      }
+      rotate([0, 90, 0]) {
+        cylinder(d=di+g*2, h=c, center=true);
+      }
+      //rounding
+      translate([0, -do/2-w, z/2]) {
+        resize([x+g, do+di+w, z-do+di]) {
+          rotate([0, 90, 0]) {
+            cylinder(r=10, h=x+g, center=true, $fn=64);
+          }
+        }
+      }
+    }
+    translate([0, -do+w, z/2-do]) {
+      resize([x+g, do*3, z+do*2]) {
+        rotate([0, 90, 0]) {
+          cylinder(r=10, h=x+g, center=true, $fn=64);
+        }
+      }
+    }
+  }
+}
+
+module latch_catch(
+  di=w*2,
+  x=x,
+  y,//=-e+do/2+w,
+  z,//=z-do/2+w-g/2
+) {
+  translate([0, y, z]) {
+    rotate([0, 90, 0]) {
+      cylinder(d=di, h=x, center=true);
+    }
+  }
 }
 
 module hooks(x=x,y=y,w=w) {
@@ -157,17 +352,17 @@ module inset_A(
     translate([x0-w, 10, 5]) {
       connector();
       translate([0, -5, 0]) {
-        cube(size=[w*3, 9, z/2]);
+        cube(size=[w*3, 10, z/2]);
       }
     }
     translate([x0-w, 27, 5]) {
       connector();
       translate([0, -5, 0]) {
-        cube(size=[w*3, 9, z/2]);
+        cube(size=[w*3, 10, z/2]);
       }
     }
   }
-  translate([x0+65, 15, 0]) {
+  translate([x0+65, 20, 0]) {
     grove_module_holder(x=2);
   }
 }
@@ -188,7 +383,7 @@ module inset_mega(
     x0=x0,
     y0=y0
   );
-  translate([x0, y0, 0]) {
+  translate([x0+3, y0, 0]) {
     %mega();
     mega_holder_screw(
       w=w
@@ -212,7 +407,7 @@ module inset_uno(
     x0=x0,
     y0=y0
   );
-  translate([x0, y0, 0]) {
+  translate([x0+3, y0, 0]) {
     %uno();
     %uno_usb();
     uno_holder_screw(
@@ -263,7 +458,7 @@ module inset_oled_joy(
       } */
     }
   }
-  translate([x0+65, y-y0+15, 0]) {
+  translate([x0+65, y-y0+15, -w]) {
     rotate([180, 0, 0]) {
       joystick_setup();
     }
@@ -283,14 +478,18 @@ module box_mega(
   g=g,
   di=w*2,
 ) {
-  box(
-    x=x,
-    y=y,
-    z=z,
-    w=w,
-    g=g,
-    di=di
-  );
+  difference() {
+    box(
+      x=x,
+      y=y,
+      z=z,
+      w=w,
+      g=g,
+      di=di,
+      latch=0
+    );
+    cutout(y=y/2,z=z,w=w);
+  }
 }
 
 module box_uno(
@@ -303,14 +502,18 @@ module box_uno(
   g=g,
   di=w*2,
 ) {
-  box(
-    x=x,
-    y=y,
-    z=z,
-    w=w,
-    g=g,
-    di=di
-  );
+  difference() {
+    box(
+      x=x,
+      y=y,
+      z=z,
+      w=w,
+      g=g,
+      di=di,
+      latch=0
+    );
+    cutout(y=y/2,z=z,w=w);
+  }
 }
 
 module box_touch_display(
@@ -321,7 +524,7 @@ module box_touch_display(
   z=z/2,
   w=w,
   g=g,
-  di=w*2,
+  di=w*2
 ) {
   box(
     x=x,
@@ -329,7 +532,8 @@ module box_touch_display(
     z=z,
     w=w,
     g=g,
-    di=di
+    di=di,
+    latch=1
   );
 }
 
@@ -350,7 +554,8 @@ module box_oled_joy(
       z=z,
       w=w,
       g=g,
-      di=di
+      di=di,
+      latch=1
     );
     translate([x0+75+w, y-y0+15, 0]) {
       cylinder(d=12.5, h=10, center=true);
@@ -370,12 +575,33 @@ module box(
   z=z/2,
   w=w,
   g=g,
-  di=w*2
+  di=w*2,
+  latch=0
 ) {
-    difference() {
-      cube(size=[x, y, z]);
-      translate([w, w, w]) {
-        cube(size=[x-w*2, y-w*2, z]);
+  difference() {
+    cube(size=[x, y, z]);
+    translate([w, w, w]) {
+      cube(size=[x-w*2, y-w*2, z]);
+    }
+    if (latch>0) {
+      translate([x/2, 0, 0]) {
+        latch_catch(
+          di=w*2,
+          x=x/10+w,
+          y=w*2,//=-e+do/2+w,
+          z=-w+g/2//=z-do/2+w-g/2
+        );
       }
     }
+  }
+}
+
+module cutout(
+  w=w,
+  y=y/2,
+  z=z
+) {
+  translate([-w, w, w*3]) {
+    cube(size=[w*3, y, z]);
+  }
 }

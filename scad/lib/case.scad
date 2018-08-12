@@ -362,7 +362,7 @@ module joystick_setup() {
             translate([0, 0, 23/2-7.5]) {
               cube(size=[2, 2, 22], center=true);
               translate([0, 0, 2]) {
-                include <knob.scad>;
+                include <../knob.scad>;
               }
             }
           }

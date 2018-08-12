@@ -20,6 +20,7 @@ module grove_module_holder(x=1,y=1,flat=0,h=3) {
 
 module grove_module_base_holder(h=3) {
   $fn=16;
+  hole=1.8;
   translate([-10, 0, -h+3]) {
     cylinder(r=2.25, h=h+2);
   }
@@ -30,8 +31,11 @@ module grove_module_base_holder(h=3) {
     difference() {
       cylinder(r=2.5, h=h);
       translate([0, 0, h-2]) {
-        cylinder(d=1.6, h=h*2, center=true);
+        cylinder(d=hole, h=h*2, center=true);
         /* boltHole(size=2,length=h); */
+      }
+      translate([0, 0, h]) {
+        cylinder(d1=hole, d2=hole+1, h=1, center=true);
       }
     }
   }
@@ -39,8 +43,11 @@ module grove_module_base_holder(h=3) {
     difference() {
       cylinder(r=2.5, h=h);
       translate([0, 0, h-2]) {
-        cylinder(d=1.6, h=h*2, center=true);
+        cylinder(d=1.8, h=h*2, center=true);
         /* boltHole(size=2,length=h); */
+      }
+      translate([0, 0, h]) {
+        cylinder(d1=hole, d2=hole+1, h=1, center=true);
       }
     }
   }

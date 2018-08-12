@@ -13,7 +13,7 @@ module connector() {
       }
     }
     translate([-6, -5, 31]) {
-      cube(size=[10, 10, 5]);
+      cube(size=[10, 10, 7]);
     }
   }
 }
