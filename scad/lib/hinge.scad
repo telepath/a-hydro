@@ -1,4 +1,3 @@
-
 module hinge(
   h=z/2,
   x=x,
@@ -42,7 +41,7 @@ module hinge_element1(
 ) {
   xo=di+w*6+g*2;
   intersection() {
-    rotate(45) cube(size=[z, xo, di*2], center=true);
+    rotate(45) cube(size=[z, xo, di*6], center=true);
     union() {
       cylinder(d=di+g*2+w*2, h=x);
       cube(size=[di/2+g+w, di*5, x]);
@@ -74,14 +73,14 @@ module hinge_element2(
   rotate([0, 0, a+90]) {
     intersection() {
       rotate(-45) cube(size=[z, xo, di*2], center=true);
-      union() {
-        difference() {
+      difference() {
+        union() {
           cylinder(d=di+g*2+w*2, h=x);
-          cylinder(d=di+g*2, h=x*2, center=true);
+          translate([-(di/2+g+w), 0, 0]) {
+            cube(size=[di/2+g+w, di*5, x]);
+          }
         }
-        translate([-(di/2+g+w), 0, 0]) {
-          cube(size=[di/2+g+w, di*5, x]);
-        }
+        cylinder(d=di+g*2, h=x*2, center=true);
       }
     }
   }

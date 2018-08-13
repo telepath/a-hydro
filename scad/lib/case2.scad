@@ -2,6 +2,7 @@ include <arduino.scad>
 include <grove.scad>
 include <hinge.scad>
 include <vitamins.scad>
+include <conf/config.scad>
 
 //width
 w=1.5;
@@ -38,6 +39,17 @@ module assembly(
   a=a
 ) {
   yh=di/2+g+w*2;
+  t=w/2;
+  th=4;
+  font="Liberation Sans:style=Bold";
+  translate([w, y+yh-w, w]) {
+    linear_extrude(t) {
+      text(str(board,"/",inset,"/",MAT), size=th, font=font, valign="top");
+      translate([0, -th*2, 0]) {
+        text(str(SRC," ",VER), size=th, font=font, valign="top");
+      }
+    }
+  }
   hinge(
     h=z/2,
     x=x,

@@ -4,3 +4,6 @@
 [submodule "scad/lib/FreeCAD-library"]
 	path = scad/lib/FreeCAD-library
 	url = https://github.com/FreeCAD/FreeCAD-library.git
+[submodule "scad/lib/Write.scad"]
+	path = scad/lib/Write.scad
+	url = ../Write.scad
