@@ -12,44 +12,36 @@ module grove_module_holder(x=1,y=1,flat=0,h=3) {
         }
       }
     }
-    translate([10, 0, -h]) {
+    /* translate([10, 0, -h]) {
       cube(size=[20*(x-1), 10*y, 3*h+20], center=true);
-    }
+    } */
   }
 }
 
 module grove_module_base_holder(h=3) {
   $fn=16;
   hole=1.8;
-  translate([-10, 0, -h+3]) {
-    cylinder(r=2.25, h=h+2);
-  }
-  translate([10, 0, -h+3]) {
-    cylinder(r=2.25, h=h+2);
-  }
-  translate([0, 10, -h+3]) {
-    difference() {
-      cylinder(r=2.5, h=h);
-      translate([0, 0, h-2]) {
-        cylinder(d=hole, h=h*2, center=true);
-        /* boltHole(size=2,length=h); */
-      }
-      translate([0, 0, h]) {
-        cylinder(d1=hole, d2=hole+1, h=1, center=true);
-      }
-    }
-  }
-  translate([0, -10, -h+3]) {
-    difference() {
-      cylinder(r=2.5, h=h);
-      translate([0, 0, h-2]) {
-        cylinder(d=1.8, h=h*2, center=true);
-        /* boltHole(size=2,length=h); */
-      }
-      translate([0, 0, h]) {
-        cylinder(d1=hole, d2=hole+1, h=1, center=true);
+  points=[
+  [-10,0,0],
+  [0,-10,0],
+  [10,0,0],
+  [0,10,0]
+  ];
+
+  translate([0, 0, -h+3]) {
+  for (i = points) {
+    translate(i) {
+      difference() {
+        cylinder(r=2.5, h=h);
+        translate([0, 0, h-2]) {
+          cylinder(d=hole, h=h*2, center=true);
+        }
+        translate([0, 0, h]) {
+          cylinder(d1=hole, d2=hole+1, h=1, center=true);
+        }
       }
     }
+  }
   }
 }
 
@@ -120,8 +112,9 @@ module joystick_cap(
   h=15,
   h0=8,
   d1=20,
-  d2=3,
-  w=0.5
+  d2=7.5,
+  w=0.5,
+  di=3
 ) {
   $fn=24;
   ht1=(h-h0-d2/2)*2+d2/2;
@@ -148,9 +141,9 @@ module joystick_cap(
       sphere(d=d2);
       sphere(d=d2-w*2);
       translate([0, 0, -d2]) {
-        cylinder(d=d2-w*2, h=d2);
+        cylinder(d=d2+w*2, h=d2);
       }
-      cylinder(d=1, h=10);
+      cylinder(d=di, h=h);
     }
   }
 }
@@ -182,6 +175,9 @@ module display_setup() {
         translate([0, 0, -3.5]) {
           display_display(z=5);
         }
+        translate([10, 0, -5]) {
+          cube(size=[20, 10, 3*5+20], center=true);
+        }
       }
       color("black") {
         %display_display();
@@ -191,17 +187,21 @@ module display_setup() {
 }
 
 module joystick_setup() {
+  h=15;
   /* translate([15, -23, 24]) {
     translate([65, 0, 0]) {
       rotate([-45, 0, 180]) { */
         translate([0, 0, -20]) {
           %grove_module(x=2,flat=0); //joystick
-          translate([0, 0, 7.5]) {
+          translate([0, 0, h/2]) {
             rotate([180, 0, 0]) {
               difference() {
-                grove_module_holder(x=2,flat=1,h=15);
+                grove_module_holder(x=2,flat=1,h=h);
                 translate([23.5, 0, 0]) {
-                  cube(size=[10, 10, 30], center=true);
+                  cube(size=[10, 10, h*2], center=true);
+                }
+                translate([10, 0, -h]) {
+                  cube(size=[20, 10, 3*h+20], center=true);
                 }
               }
             }
@@ -215,7 +215,7 @@ module joystick_setup() {
             translate([0, 0, 23/2-7.5]) {
               cube(size=[2, 2, 22], center=true);
               translate([0, 0, 2]) {
-                include <../knob.scad>;
+                import("stl/knob.stl");
               }
             }
           }
