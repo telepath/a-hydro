@@ -7,3 +7,6 @@
 [submodule "scad/lib/Write.scad"]
 	path = scad/lib/Write.scad
 	url = ../Write.scad
+[submodule "scad/lib/openscad-slicer-makefile"]
+	path = scad/lib/openscad-slicer-makefile
+	url = ../openscad-slicer-makefile.git
