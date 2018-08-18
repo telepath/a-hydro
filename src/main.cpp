@@ -93,26 +93,43 @@ void joystick_onRight(/* arguments */) {
 }
 void joystick_onPush(/* arguments */) {
   Serial.println("joystick_onPush");
-  // ms.select();
+  ms.select();
 }
 void joystick_reset(/* arguments */) {
   // upBtn_button.event(upBtn_button.EVT_RELEASE);
 }
 void joystick_onChange( int idx, int v, int up ) {
   if (idx == (int)'x' && v == 0 && up == false) {
-    joystick_onLeft();
+    if (joyInvert) {
+      joystick_onRight();
+    }
+    else {
+      joystick_onLeft();
+    }
   }
   else if (idx == (int)'x' && v == 1 && up == true) {
-    joystick_onRight();
+    if (joyInvert) {
+      joystick_onLeft();
+    } else {
+      joystick_onRight();
+    }
   }
   else if (idx == (int)'x' && v == 2 && up == true) {
     joystick_onPush();
   }
   else if (idx == (int)'y' && v == 0 && up == false) {
-    joystick_onDown();
+    if (joyInvert) {
+      joystick_onUp();
+    } else {
+      joystick_onDown();
+    }
   }
   else if (idx == (int)'y' && v == 1 && up == true) {
-    joystick_onUp();
+    if (joyInvert) {
+      joystick_onDown();
+    } else {
+      joystick_onUp();
+    }
   }
   else if (v == 0 && up == false){
     joystick_onPush();
