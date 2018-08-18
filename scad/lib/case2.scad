@@ -19,10 +19,13 @@ z=40;
 //gap
 g=0.75;
 
-a=180;
+a=0;
 
-board=UNO;
+board=MEGA;
 inset=TOUCH_DISPLAY;
+
+grid_x=25;
+grid_y=17.5;
 
 $fn=20;
 
@@ -42,7 +45,9 @@ module assembly(
   t=w/2;
   th=4;
   font="Liberation Sans:style=Bold";
-  translate([w, y+yh-w, w]) {
+  translate([w*2, yh+w*2, w])
+  rotate(90)
+   {
     linear_extrude(t) {
       text(str(board,"/",inset,"/",MAT), size=th, font=font, valign="top");
       translate([0, -th*2, 0]) {
@@ -80,7 +85,10 @@ module assembly(
         );
       }
     }
-    translate([x/2, yh+y, w*2+g]) {
+    translate([x/10, yh+y, w*2+g]) {
+      latch(x=x/10,di=w*2,w=w,g=g,a=a/2);
+    }
+    translate([x*0.9, yh+y, w*2+g]) {
       latch(x=x/10,di=w*2,w=w,g=g,a=a/2);
     }
    }
@@ -312,14 +320,13 @@ module latch_catch(
 }
 
 module hooks(x=x,y=y,w=w) {
-  translate([15, y, 0]) {
+  translate([x*0.2, y, 0]) {
     hook(w=w);
   }
-  translate([x-15, y, 0]) {
+  translate([x*0.8, y, 0]) {
     hook(w=w);
   }
 }
-
 module hook(w=w) {
   translate([-5, 0, 0]) {
     difference() {
@@ -346,12 +353,23 @@ module inset_A(
 ) {
   difference() {
     union() {
+      inset_grid(
+        x=x,
+        y=y,
+        z=z,
+        w=w,
+        x0=x0,
+        y0=y0
+      );
       translate([x0, 0, 0]) {
         cube(size=[w, y, z/2-w]);
       }
       translate([x0, 0, 0]) {
         cube(size=[34.5,34.5, 7]);
       }
+    }
+    translate([x0+w, floor(y0)-1, 0]) {
+      cube(size=[uno_x, ceil(uno_y)+1, z]);
     }
     translate([x0, y0, 0]) {
       uno_usb();
@@ -374,8 +392,18 @@ module inset_A(
       }
     }
   }
-  translate([x0+65, 20, 0]) {
-    grove_module_holder(x=2);
+}
+
+module inset_grid(
+  x=x,
+  y=y,
+  z=z,
+  w=w,
+  x0=x0,
+  y0=y0
+) {
+  translate([x0+grid_x, grid_y, 0]) {
+    grove_module_holder(x=4,y=4);
   }
 }
 
@@ -396,9 +424,10 @@ module inset_mega(
     y0=y0
   );
   translate([x0+3, y0, 0]) {
-    %mega();
+    /* %mega(); */
     mega_holder_screw(
-      w=w
+      w=w,
+      h=3
     );
   }
 }
@@ -441,12 +470,14 @@ module inset_touch_display(
   x0=x0,
   y0=y0
 ) {
-  translate([x0+15, y-y0+15, 0]) {
-    grove_module_holder(x=2);
-  }
-  translate([x0+65, y-y0+15, 0]) {
-    grove_module_holder(x=2);
-  }
+  inset_grid(
+    x=x,
+    y=y,
+    z=z,
+    w=w,
+    x0=x0,
+    y0=y0
+  );
   translate([x0, 0, 0]) {
     cube(size=[w, y-w, z/2-w]);
   }
@@ -461,19 +492,37 @@ module inset_oled_joy(
   x0=x0,
   y0=y0
 ) {
-  translate([x0+15, y-y0+15, 0]) {
-    difference() {
-      /* grove_module_holder(x=2); */
-      display_setup();
-      /* translate([0, 0, -w-2]) {
-        display_display(z=5);
-      } */
+  difference() {
+    union() {
+      difference() {
+        union() {
+          inset_grid(
+            x=x,
+            y=y,
+            z=z,
+            w=w,
+            x0=x0,
+            y0=y0
+          );
+        }
+        translate([x0+grid_x+50, grid_y+60, 0]) {
+          joystick_cutout();
+        }
+      }
+      translate([x0+grid_x+50+10, grid_y+60, -w]) {
+        rotate([180, 0, 0]) {
+          rotate([0, 0, 180]) {
+            joystick_setup();
+          }
+        }
+      }
+    }
+    translate([x0+grid_x, grid_y+60, 0]) {
+      display_display(z=5);
     }
   }
-  translate([x0+65, y-y0+15, -w]) {
-    rotate([180, 0, 0]) {
-      joystick_setup();
-    }
+  translate([x0+grid_x, grid_y+60, 0]) {
+    display_setup();
   }
   translate([x0, 0, 0]) {
     cube(size=[w, y-w, z/2-w]);
@@ -569,13 +618,10 @@ module box_oled_joy(
       di=di,
       latch=1
     );
-    translate([x0+75+w, y-y0+15, 0]) {
-      cylinder(d=12.5, h=10, center=true);
-      translate([0, 0, w/2]) {
-        cylinder(d=20, h=w);
-      }
+    translate([x0+grid_x+50+w, grid_y+60, 0]) {
+      joystick_cutout();
     }
-    translate([x0+15+w, y-y0+15, 0]) {
+    translate([x0+grid_x+w, grid_y+60, 0]) {
       display_display(z=5);
     }
   }
@@ -596,12 +642,20 @@ module box(
       cube(size=[x-w*2, y-w*2, z]);
     }
     if (latch>0) {
-      translate([x/2, 0, 0]) {
+      translate([x*0.1, 0, 0]) {
         latch_catch(
           di=w*2,
           x=x/10+w,
           y=w*2,//=-e+do/2+w,
-          z=-w+g/2//=z-do/2+w-g/2
+          z=-w+g//=z-do/2+w-g/2
+        );
+      }
+      translate([x*0.9, 0, 0]) {
+        latch_catch(
+          di=w*2,
+          x=x/10+w,
+          y=w*2,//=-e+do/2+w,
+          z=-w+g//=z-do/2+w-g/2
         );
       }
     }

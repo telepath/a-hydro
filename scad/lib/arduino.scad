@@ -2,6 +2,7 @@ include <MCAD/nuts_and_bolts.scad>
 
 UNO="uno";
 MEGA="mega";
+UNI="mega";
 
 mega_x=105;
 mega_y=53.3;
@@ -69,17 +70,19 @@ module holder_screw(
     [66,35.65,0],
     [90.5,51,0],
     [96.6,2.5,0]
-  ]
+  ],
+  h=METRIC_NUT_THICKNESS[3]
 ) {
   size=3;
   hole=2.7;
   for (i = holes) {
     translate(i) {
       difference() {
-        nutHole(size=size);
-        cylinder(d=hole, h=10, center=true);
-        /* boltHole(size=size,length=10); */
-        translate([0, 0, METRIC_NUT_THICKNESS[3]]) {
+        resize([0,0,h]){
+          nutHole(size=size);
+        }
+        cylinder(d=hole, h=h*3, center=true);
+        translate([0, 0, h]) {
           cylinder(d1=hole, d2=hole+1, h=1, center=true);
         }
       }

@@ -2,19 +2,18 @@ use <lib/MCAD/regular_shapes.scad>
 
 OLED_JOY="oled_joy";
 TOUCH_DISPLAY="touch_display";
-
+/* !grove_module_holder(x=2,y=1,flat=0,h=3); */
 module grove_module_holder(x=1,y=1,flat=0,h=3) {
   difference() {
     for (i=[0:x-1]) {
-      translate([20*i, 0, 0]) {
+    for (j=[0:y-1]) {
+      translate([20*i, 20*j, 0]) {
         rotate(90*i) {
           grove_module_base_holder(h=h);
         }
       }
     }
-    /* translate([10, 0, -h]) {
-      cube(size=[20*(x-1), 10*y, 3*h+20], center=true);
-    } */
+    }
   }
 }
 
@@ -223,4 +222,11 @@ module joystick_setup() {
       /* }
     }
   } */
+}
+
+module joystick_cutout(w=w) {
+  cylinder(d=12.5, h=50, center=true);
+  translate([0, 0, w/2]) {
+    cylinder(d=20, h=w);
+  }
 }
