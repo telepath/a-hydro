@@ -7,7 +7,7 @@ int waterPin = 2;
 // int upBtnPin = 8;
 int joyXPin = A0;
 int joyYPin = joyXPin+1;
-bool joyInvert = true;
+bool joyInvert = false;
 int waterTimeout = 5;
 
 double pumpOnHours = 0.25;
