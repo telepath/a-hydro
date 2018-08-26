@@ -2,7 +2,3 @@
 .piolibdeps
 .clang_complete
 .gcc-flags.json
-*.gcode
-*.stl
-*.deps
-*.png
