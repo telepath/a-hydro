@@ -1,12 +1,12 @@
 #ifndef MAIN_H
 #define MAIN_H
 
-#include <Arduino.h>
+// #include <Arduino.h>
 #include <Wire.h>
 #include <Automaton.h>
 #include <MenuSystem.h>
-
-#include "atm_vbutton.h"
+#include <Ultrasonic.h>
+// #include "atm_vbutton.h"
 #include "menu.h"
 #include "config.h"
 
