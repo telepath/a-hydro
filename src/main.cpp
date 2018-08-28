@@ -1,10 +1,20 @@
 #include "main.h"
 
+Ultrasonic ultrasonic(sonicPin);
 MenuRenderer menu_renderer;
 MenuSystem ms(menu_renderer);
 Menu mu_pump("Pump");
 
+void pump_test_bit_onChange(int idx, int v, int up) {
+  if (pump_test_bit.state()) {
+    pumpOn_timer.trigger(pumpOn_timer.EVT_STOP);
+  } else {
+    pumpOn_timer.trigger(pumpOn_timer.EVT_START);
+  }
+}
+
 void pump_controller_onTrue(int idx, int v, int up){
+  Serial.println("pump_controller_onTrue");
   // display.setInverseDisplay();
   menu_renderer.invert_display();
   // display.clearDisplay();
@@ -12,20 +22,37 @@ void pump_controller_onTrue(int idx, int v, int up){
 }
 
 void pump_controller_onFalse(int idx, int v, int up){
+  Serial.println("pump_controller_onFalse");
   // display.setNormalDisplay();
   menu_renderer.normal_display();
   pump_relais.off();
 }
 
 void pumpOn_onTimer(int idx, int v, int up){
+  Serial.println("pumpOn_onTimer");
   // pump_relais.on();
   pump_bit.on();
   pumpOff_timer.start();
 }
 
 void pumpOff_onTimer(int idx, int v, int up){
+  Serial.println("pumpOff_onTimer");
   // pump_relais.on();
   pump_bit.off();
+}
+
+void sonic_onTimer(int idx, int v, int up){
+  int cm = ultrasonic.MeasureInCentimeters();
+  Serial.println("sonic_onTimer");
+  Serial.print("measured ");
+  Serial.print(cm);
+  Serial.print(" cm");
+  Serial.println("");
+  Serial.print("Tank ");
+  Serial.print(tankEmpty);
+  Serial.print("/");
+  Serial.print(tankFull);
+  Serial.println("");
 }
 //
 // void drawIntLabel(unsigned char row, const char *label, int value = 0, bool indicator=false){
@@ -150,10 +177,8 @@ void mu_pumpOff_onSelect(NumericMenuItem* p_menu_component){
 void mi_pumpTest_onSelect(MenuComponent* p_menu_component){
   pump_test_bit.toggle();
   if (pump_test_bit.state()) {
-    pumpOn_timer.trigger(pumpOn_timer.EVT_STOP);
     p_menu_component->set_name("Test (ON)");
   } else {
-    pumpOn_timer.trigger(pumpOn_timer.EVT_START);
     p_menu_component->set_name("Test (OFF)");
   }
 }
@@ -182,6 +207,7 @@ void setup() {
 
   //Setup Serial for debugging
   Serial.begin(9600);
+  Serial.println("Setup Serial");
 
   // //setup display
   // display.init();
@@ -190,6 +216,7 @@ void setup() {
   // display.setPageMode();
   // drawDisplay();
   // setup menu
+  Serial.println("menu_renderer.setup_display");
   menu_renderer.setup_display();
 
   Menu mu_water("Water Sensor");
@@ -205,14 +232,19 @@ void setup() {
   // ms.display();
 
   //setup pump relay
+  Serial.println("pump_relais.begin");
   pump_relais.begin(pumpPin);
 
   //setup pump bit
+  Serial.println("pump_bit.begin");
   pump_bit.begin();
 
-  pump_test_bit.begin();
+  Serial.println("pump_test_bit.begin");
+  pump_test_bit.begin()
+  .onChange(pump_test_bit_onChange);
 
   //setup pump start timer
+  Serial.println("pumpOn_timer.begin");
   pumpOn_timer.begin()
     .interval_seconds((uint32_t)pumpOnSeconds)
     .repeat(-1)
@@ -221,10 +253,19 @@ void setup() {
     .start();
 
   //setup pump stop timer
+  Serial.println("pumpOff_timer.begin");
   pumpOff_timer.begin()
     .interval_seconds((uint32_t)pumpOffSeconds)
     .onTimer(pumpOff_onTimer);
 
+  Serial.println("sonic_timer.begin");
+  sonic_timer.begin()
+    .interval_seconds((uint32_t)sonicSeconds)
+    .repeat(-1)
+    .onTimer(sonic_onTimer)
+    .start();
+
+  Serial.println("display_timer.begin");
   display_timer.begin()
     .interval_millis(displayUpdate)
     .repeat(ATM_COUNTER_OFF)
@@ -237,6 +278,7 @@ void setup() {
   // water_sensor.begin(A0).trace(Serial);
 
   //setup pump safety
+  Serial.println("pump_controller.begin");
   pump_controller.begin()
     .IF(pump_bit)
     // .AND(water_sensor)
@@ -245,11 +287,13 @@ void setup() {
     .onChange(false, pump_controller_onFalse);
 
   //setup joystick
+  Serial.println("joyX_comp.begin");
   joyX_comp.begin(joyXPin, 50)
     // .trace(Serial)
     .threshold(joy_threshold_list, sizeof(joy_threshold_list) )
     .onChange(true, joystick_onChange, (int)'x' )
     .onChange(false, joystick_onChange, (int)'x' );
+  Serial.println("joyY_comp.begin");
   joyY_comp.begin(joyYPin, 50)
     // .trace(Serial)
     .threshold(joy_threshold_list, sizeof(joy_threshold_list) )
@@ -260,6 +304,8 @@ void setup() {
   //   .onPress(upBtn_onPress)
   //   .trace(Serial)
   //   .repeat();
+  Serial.println("Setup done.");
+  Serial.println("");
 }
 
 void loop() {
