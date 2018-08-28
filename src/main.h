@@ -20,9 +20,12 @@ Atm_controller pump_controller;
 Atm_timer pumpOn_timer;
 Atm_timer pumpOff_timer;
 Atm_timer display_timer;
+Atm_timer sonic_timer;
 Atm_comparator joyX_comp;
 Atm_comparator joyY_comp;
 // Atm_button upBtn_button;
+
+void sonicWrite();
 
 void pump_controller_onTrue(int idx, int v, int up);
 

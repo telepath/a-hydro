@@ -13,6 +13,8 @@ int sonicPin = 4;
 int sonicSeconds = 30;
 
 int tankFull = 5;
+int tankEmpty = 50;
+
 double pumpOnHours = 0.25;
 // int pumpOnMinutes = 60;
 // int pumpOffMinutes = 1;

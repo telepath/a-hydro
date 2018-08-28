@@ -52,6 +52,20 @@ void sonic_onTimer(int idx, int v, int up){
   Serial.print(tankFull);
   Serial.println("");
 }
+
+void sonic_onTimer(int idx, int v, int up){
+  int cm = ultrasonic.MeasureInCentimeters();
+  Serial.println("sonic_onTimer");
+  Serial.print("measured ");
+  Serial.print(cm);
+  Serial.print(" cm");
+  Serial.println("");
+  Serial.print("Tank ");
+  Serial.print(tankEmpty);
+  Serial.print("/");
+  Serial.print(tankFull);
+  Serial.println("");
+}
 //
 // void drawIntLabel(unsigned char row, const char *label, int value = 0, bool indicator=false){
 //   unsigned char text[6] = "";
