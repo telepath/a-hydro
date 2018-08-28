@@ -1,6 +1,96 @@
 #include "main.h"
 
 Ultrasonic ultrasonic(sonicPin);
+
+void vWrite(int pin, int value) {
+  #ifdef BLYNK
+  Serial.print("Write ");
+  Serial.print(value);
+  Serial.print(" to pin ");
+  Serial.print(pin);
+  Serial.println("");
+  Blynk.virtualWrite(pin, value);
+  #endif
+}
+
+#ifdef BLYNK
+ESP8266 wifi(&EspSerial);
+
+
+BLYNK_READ_DEFAULT()
+{
+  int pin = request.pin;      // Which exactly pin is handled?
+  int value = 0;
+  if (pin==sonicVPin) {
+    int cm = ultrasonic.MeasureInCentimeters();
+    value = ((double)tankEmpty - (double)cm - (double)tankFull) / ((double)tankEmpty-(double)tankFull) * 100;
+  } else if (pin==pumpOnVPin) {
+    value = pumpOn_timer.left()/1000;
+  } else if (pin==tankFullVPin) {
+    value = tankFull;
+  } else if (pin==tankEmptyVPin) {
+    value = tankEmpty;
+  } else if (pin==blynkMillisVPin) {
+    value = blynkMillis;
+  } else if (pin==pumpOnMinutesVPin) {
+    value = pumpOnSeconds / 60;
+  } else if (pin==sonicSecondsVPin) {
+    value = sonicSeconds;
+  } else if (pin==pumpOffSecondsVPin) {
+    value = pumpOffSeconds;
+  } else if (pin==pumpVPin) {
+    value = pump_controller.state();
+  }
+  vWrite(pin, value);
+}
+
+BLYNK_WRITE_DEFAULT()
+{
+  int pin = request.pin;      // Which exactly pin is handled?
+  Serial.print("Received ");
+  Serial.print(param.asString());
+  Serial.print(" on pin ");
+  Serial.print(pin);
+  Serial.println("");
+
+  if (pin==tankFullVPin) {
+    tankFull = param.asInt();
+    Blynk.setProperty(sonicVPin, "max", tankFull);
+  } else if (pin==tankEmptyVPin) {
+    tankEmpty = param.asInt();
+    Blynk.setProperty(sonicVPin, "min", tankEmpty);
+  } else if (pin==blynkMillisVPin) {
+    blynkMillis = param.asInt();
+    blynk_timer.interval_seconds((uint32_t)blynkMillis);
+  } else if (pin==pumpOnMinutesVPin) {
+    pumpOnSeconds = param.asDouble() * 60.0;
+    pumpOn_timer.interval_seconds((uint32_t)pumpOnSeconds);
+  } else if (pin==sonicSecondsVPin) {
+    sonicSeconds = param.asDouble();
+    sonic_timer.interval_seconds((uint32_t)sonicSeconds);
+  } else if (pin==pumpOffSecondsVPin) {
+    pumpOffSeconds = param.asDouble();
+    pumpOff_timer.interval_seconds((uint32_t)pumpOffSeconds);
+  } else if (pin==pumpVPin) {
+    pump_test_bit.toggle();
+  }
+}
+
+void blynk_writeConfig() {
+  vWrite(sonicSecondsVPin, sonicSeconds);
+  vWrite(blynkMillisVPin, blynkMillis);
+  vWrite(pumpOnMinutesVPin, pumpOnSeconds / 60);
+  vWrite(pumpOffSecondsVPin, pumpOffSeconds);
+  vWrite(tankEmptyVPin, tankEmpty);
+  vWrite(tankFullVPin, tankFull);
+}
+
+BLYNK_CONNECTED() {
+    Blynk.syncAll();
+    blynk_writeConfig();
+}
+#endif
+
 MenuRenderer menu_renderer;
 MenuSystem ms(menu_renderer);
 Menu mu_pump("Pump");
@@ -19,6 +109,9 @@ void pump_controller_onTrue(int idx, int v, int up){
   menu_renderer.invert_display();
   // display.clearDisplay();
   pump_relais.on();
+  #ifdef BLYK
+  vWrite(pumpVPin,1);
+  #endif
 }
 
 void pump_controller_onFalse(int idx, int v, int up){
@@ -26,6 +119,9 @@ void pump_controller_onFalse(int idx, int v, int up){
   // display.setNormalDisplay();
   menu_renderer.normal_display();
   pump_relais.off();
+  #ifdef BLYK
+  vWrite(pumpVPin,0);
+  #endif
 }
 
 void pumpOn_onTimer(int idx, int v, int up){
@@ -33,24 +129,22 @@ void pumpOn_onTimer(int idx, int v, int up){
   // pump_relais.on();
   pump_bit.on();
   pumpOff_timer.start();
+  #ifdef BLYNK
+  Blynk.setProperty(pumpOnVPin, "label", "PumpOff");
+  Blynk.setProperty(pumpOnVPin, "color", BLYNK_DARK_BLUE);
+  vWrite(pumpOnVPin,pumpOffSeconds);
+  #endif
 }
 
 void pumpOff_onTimer(int idx, int v, int up){
   Serial.println("pumpOff_onTimer");
   // pump_relais.on();
   pump_bit.off();
-void sonic_onTimer(int idx, int v, int up){
-  int cm = ultrasonic.MeasureInCentimeters();
-  Serial.println("sonic_onTimer");
-  Serial.print("measured ");
-  Serial.print(cm);
-  Serial.print(" cm");
-  Serial.println("");
-  Serial.print("Tank ");
-  Serial.print(tankEmpty);
-  Serial.print("/");
-  Serial.print(tankFull);
-  Serial.println("");
+  #ifdef BLYNK
+  Blynk.setProperty(pumpOnVPin, "label", "PumpOn");
+  Blynk.setProperty(pumpOnVPin, "color", BLYNK_GREEN);
+  vWrite(pumpOnVPin, pumpOnSeconds);
+  #endif
 }
 
 void sonic_onTimer(int idx, int v, int up){
@@ -65,7 +159,27 @@ void sonic_onTimer(int idx, int v, int up){
   Serial.print("/");
   Serial.print(tankFull);
   Serial.println("");
+  vWrite(sonicVPin, ((double)tankEmpty - (double)cm - (double)tankFull) / ((double)tankEmpty-(double)tankFull) * 100);
 }
+
+void blynk_sendPump() {
+  if (pumpOff_timer.state() == pumpOff_timer.IDLE) {
+    Serial.print("pumpOn_timer.left = ");
+    Serial.print(pumpOn_timer.left());
+    Serial.println("");
+    Blynk.virtualWrite(pumpOnVPin, pumpOn_timer.left()/1000);
+  } else {
+    Serial.print("pumpOff_timer.left = ");
+    Serial.print(pumpOff_timer.left());
+    Blynk.virtualWrite(pumpOnVPin, pumpOff_timer.left()/1000);
+  }
+}
+
+#ifdef BLYNK
+void blynk_onTimer(int idx, int v, int up){
+  Serial.println("blynk_onTimer");
+}
+#endif
 //
 // void drawIntLabel(unsigned char row, const char *label, int value = 0, bool indicator=false){
 //   unsigned char text[6] = "";
@@ -218,8 +332,19 @@ void setup() {
   Wire.begin();
 
   //Setup Serial for debugging
+  // #ifndef BLYNK
   Serial.begin(9600);
   Serial.println("Setup Serial");
+  // #endif
+  #ifdef BLYNK
+  // Set ESP8266 baud rate
+  Serial.println("Setup EspSerial");
+  EspSerial.begin(ESP8266_BAUD);
+  delay(10);
+
+  Serial.println("Blynk.begin");
+  Blynk.begin(auth, wifi, ssid, pass);
+  #endif
 
   // //setup display
   // display.init();
@@ -242,6 +367,9 @@ void setup() {
   MenuItem mi_pumpTest("Test", &mi_pumpTest_onSelect);
   mu_pump.add_item(&mi_pumpTest);
   // ms.display();
+
+  Blynk.setProperty(pumpOnVPin, "label", "PumpOn");
+  Blynk.setProperty(pumpOnVPin, "color", BLYNK_GREEN);
 
   //setup pump relay
   Serial.println("pump_relais.begin");
@@ -276,6 +404,16 @@ void setup() {
     .repeat(-1)
     .onTimer(sonic_onTimer)
     .start();
+
+#ifdef BLYNK
+  Serial.println("blynk_timer.begin");
+  blynk_timer.begin()
+    .interval_millis((uint32_t)blynkMillis)
+    .repeat(-1)
+    .onTimer(blynk_onTimer)
+    // .start()
+    ;
+#endif
 
   Serial.println("display_timer.begin");
   display_timer.begin()
@@ -322,4 +460,7 @@ void setup() {
 
 void loop() {
   automaton.run();
+  #ifdef BLYNK
+  Blynk.run();
+  #endif
 }

@@ -1,11 +1,17 @@
 #ifndef MAIN_H
 #define MAIN_H
 
+#define BLYNK
+
 // #include <Arduino.h>
 #include <Wire.h>
 #include <Automaton.h>
 #include <MenuSystem.h>
 #include <Ultrasonic.h>
+#ifdef BLYNK
+#include <BlynkSimpleShieldEsp8266.h>
+#include "blynk.h"
+#endif
 // #include "atm_vbutton.h"
 #include "menu.h"
 #include "config.h"
@@ -21,6 +27,9 @@ Atm_timer pumpOn_timer;
 Atm_timer pumpOff_timer;
 Atm_timer display_timer;
 Atm_timer sonic_timer;
+#ifdef BLYNK
+Atm_timer blynk_timer;
+#endif
 Atm_comparator joyX_comp;
 Atm_comparator joyY_comp;
 // Atm_button upBtn_button;

@@ -11,6 +11,7 @@ bool joyInvert = false;
 int sonicPin = 4;
 
 int sonicSeconds = 30;
+int blynkMillis = 1000;
 
 int tankFull = 5;
 int tankEmpty = 50;
@@ -25,5 +26,16 @@ double pumpOnSeconds = pumpOnHours * 60.0 * 60.0;
 // int pumpOffSeconds = 60 * pumpOffMinutes;
 
 int displayUpdate = 250; //ms
+
+#ifdef BLYNK
+// You should get Auth Token in the Blynk App.
+// Go to the Project Settings (nut icon).
+char auth[] = "";
+
+// Your WiFi credentials.
+// Set password to "" for open networks.
+char ssid[] = "";
+char pass[] = "";
+#endif
 
 #endif
