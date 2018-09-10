@@ -1,31 +1,37 @@
 #include "main.h"
 
+#ifdef ENABLE_SONIC
 Ultrasonic ultrasonic(sonicPin);
+#endif
 
 void vWrite(int pin, int value) {
   #ifdef BLYNK
-  Serial.print("Write ");
-  Serial.print(value);
-  Serial.print(" to pin ");
-  Serial.print(pin);
-  Serial.println("");
+  DEBUG(F("Write "));
+  DEBUG(value);
+  DEBUG(F(" to pin "));
+  DEBUG(pin);
+  DEBUGLN(F(""));
   Blynk.virtualWrite(pin, value);
   #endif
 }
 
 #ifdef BLYNK
+#ifndef BOARD_NODEMCU
 ESP8266 wifi(&EspSerial);
-
+#endif
 
 BLYNK_READ_DEFAULT()
 {
   int pin = request.pin;      // Which exactly pin is handled?
   int value = 0;
   if (pin==sonicVPin) {
-    int cm = ultrasonic.MeasureInCentimeters();
-    value = ((double)tankEmpty - (double)cm - (double)tankFull) / ((double)tankEmpty-(double)tankFull) * 100;
+    write_tankLevel();
   } else if (pin==pumpOnVPin) {
-    value = pumpOn_timer.left()/1000;
+    if (pump_bit.state()) {
+      value = pumpOff_timer.left()/1000;
+    } else {
+      value = pumpOn_timer.left()/1000;
+    }
   } else if (pin==tankFullVPin) {
     value = tankFull;
   } else if (pin==tankEmptyVPin) {
@@ -39,7 +45,7 @@ BLYNK_READ_DEFAULT()
   } else if (pin==pumpOffSecondsVPin) {
     value = pumpOffSeconds;
   } else if (pin==pumpVPin) {
-    value = pump_controller.state();
+    value = pump_relais.state();
   }
   vWrite(pin, value);
 }
@@ -47,32 +53,42 @@ BLYNK_READ_DEFAULT()
 BLYNK_WRITE_DEFAULT()
 {
   int pin = request.pin;      // Which exactly pin is handled?
-  Serial.print("Received ");
-  Serial.print(param.asString());
-  Serial.print(" on pin ");
-  Serial.print(pin);
-  Serial.println("");
+  DEBUG(F("Received "));
+  DEBUG(param.asString());
+  DEBUG(F(" on pin "));
+  DEBUG(pin);
+  DEBUGLN(F(""));
 
   if (pin==tankFullVPin) {
     tankFull = param.asInt();
     Blynk.setProperty(sonicVPin, "max", tankFull);
   } else if (pin==tankEmptyVPin) {
     tankEmpty = param.asInt();
+    write_tankLevel();
     Blynk.setProperty(sonicVPin, "min", tankEmpty);
   } else if (pin==blynkMillisVPin) {
     blynkMillis = param.asInt();
-    blynk_timer.interval_seconds((uint32_t)blynkMillis);
+    write_tankLevel();
+    #ifdef BLYNK
+    // blynk_timer.interval_seconds((uint32_t)blynkMillis);
+    #endif
   } else if (pin==pumpOnMinutesVPin) {
-    pumpOnSeconds = param.asDouble() * 60.0;
-    pumpOn_timer.interval_seconds((uint32_t)pumpOnSeconds);
+    pumpOnSeconds = param.asInt() * 60.0;
+    pumpOn_timer.interval_seconds(pumpOnSeconds);
   } else if (pin==sonicSecondsVPin) {
-    sonicSeconds = param.asDouble();
-    sonic_timer.interval_seconds((uint32_t)sonicSeconds);
+    sonicSeconds = param.asInt();
+    #ifdef ENABLE_SONIC
+    sonic_timer.interval_seconds(sonicSeconds);
+    #endif
   } else if (pin==pumpOffSecondsVPin) {
     pumpOffSeconds = param.asDouble();
-    pumpOff_timer.interval_seconds((uint32_t)pumpOffSeconds);
+    pumpOff_timer.interval_seconds(pumpOffSeconds);
   } else if (pin==pumpVPin) {
-    pump_test_bit.toggle();
+    if (param.asInt()==0) {
+      pump_test_bit.off();
+    } else {
+      pump_test_bit.on();
+    }
   }
 }
 
@@ -91,9 +107,11 @@ BLYNK_CONNECTED() {
 }
 #endif
 
+#ifdef JOY_OLED
 MenuRenderer menu_renderer;
 MenuSystem ms(menu_renderer);
 Menu mu_pump("Pump");
+#endif
 
 void pump_test_bit_onChange(int idx, int v, int up) {
   if (pump_test_bit.state()) {
@@ -104,29 +122,34 @@ void pump_test_bit_onChange(int idx, int v, int up) {
 }
 
 void pump_controller_onTrue(int idx, int v, int up){
-  Serial.println("pump_controller_onTrue");
+  DEBUGLN(F("pump_controller_onTrue"));
   // display.setInverseDisplay();
+  #ifdef JOY_OLED
   menu_renderer.invert_display();
+  #endif
   // display.clearDisplay();
   pump_relais.on();
-  #ifdef BLYK
-  vWrite(pumpVPin,1);
+  #ifdef BLYNK
+  vWrite(pumpVPin,pump_relais.state());
   #endif
+  write_tankLevel();
 }
 
 void pump_controller_onFalse(int idx, int v, int up){
-  Serial.println("pump_controller_onFalse");
+  DEBUGLN(F("pump_controller_onFalse"));
   // display.setNormalDisplay();
+  #ifdef JOY_OLED
   menu_renderer.normal_display();
-  pump_relais.off();
-  #ifdef BLYK
-  vWrite(pumpVPin,0);
   #endif
+  pump_relais.off();
+  #ifdef BLYNK
+  vWrite(pumpVPin,pump_relais.state());
+  #endif
+  write_tankLevel();
 }
 
 void pumpOn_onTimer(int idx, int v, int up){
-  Serial.println("pumpOn_onTimer");
-  // pump_relais.on();
+  DEBUGLN(F("pumpOn_onTimer"));
   pump_bit.on();
   pumpOff_timer.start();
   #ifdef BLYNK
@@ -137,8 +160,7 @@ void pumpOn_onTimer(int idx, int v, int up){
 }
 
 void pumpOff_onTimer(int idx, int v, int up){
-  Serial.println("pumpOff_onTimer");
-  // pump_relais.on();
+  DEBUGLN(F("pumpOff_onTimer"));
   pump_bit.off();
   #ifdef BLYNK
   Blynk.setProperty(pumpOnVPin, "label", "PumpOn");
@@ -146,65 +168,55 @@ void pumpOff_onTimer(int idx, int v, int up){
   vWrite(pumpOnVPin, pumpOnSeconds);
   #endif
 }
-
+#ifdef ENABLE_SONIC
 void sonic_onTimer(int idx, int v, int up){
+  DEBUGLN(F("sonic_onTimer"));
+  write_tankLevel();
+}
+#endif
+
+void write_tankLevel() {
+  #ifdef BLYNK
+  #ifdef ENABLE_SONIC
   int cm = ultrasonic.MeasureInCentimeters();
-  Serial.println("sonic_onTimer");
-  Serial.print("measured ");
-  Serial.print(cm);
-  Serial.print(" cm");
-  Serial.println("");
-  Serial.print("Tank ");
-  Serial.print(tankEmpty);
-  Serial.print("/");
-  Serial.print(tankFull);
-  Serial.println("");
+  DEBUG(F("measured "));
+  DEBUG(cm);
+  DEBUG(F(" cm"));
+  DEBUGLN(F(""));
+  DEBUG(F("Tank "));
+  DEBUG(tankEmpty);
+  DEBUG(F("/"));
+  DEBUG(tankFull);
+  DEBUGLN(F(""));
   vWrite(sonicVPin, ((double)tankEmpty - (double)cm - (double)tankFull) / ((double)tankEmpty-(double)tankFull) * 100);
+  #endif
+  #endif
 }
 
 void blynk_sendPump() {
   if (pumpOff_timer.state() == pumpOff_timer.IDLE) {
-    Serial.print("pumpOn_timer.left = ");
-    Serial.print(pumpOn_timer.left());
-    Serial.println("");
+    DEBUG(F("pumpOn_timer.left = "));
+    DEBUG(pumpOn_timer.left());
+    DEBUGLN(F(""));
+    #ifdef BLYNK
     Blynk.virtualWrite(pumpOnVPin, pumpOn_timer.left()/1000);
+    #endif
   } else {
-    Serial.print("pumpOff_timer.left = ");
-    Serial.print(pumpOff_timer.left());
+    DEBUG(F("pumpOff_timer.left = "));
+    DEBUG(pumpOff_timer.left());
+    #ifdef BLYNK
     Blynk.virtualWrite(pumpOnVPin, pumpOff_timer.left()/1000);
+    #endif
   }
 }
 
-#ifdef BLYNK
-void blynk_onTimer(int idx, int v, int up){
-  Serial.println("blynk_onTimer");
-}
-#endif
-//
-// void drawIntLabel(unsigned char row, const char *label, int value = 0, bool indicator=false){
-//   unsigned char text[6] = "";
-//   if (value!=0) {
-//     sprintf(text, "%3d ", value);
-//   }
-//
-//   if (indicator) {
-//     display.setTextXY(row,0);
-//     display.putChar(menuIndicator);
-//   }
-//   display.setTextXY(row, 1);
-//   display.putString(label);
-//   display.setTextXY(row, 10);
-//   display.putString(text);
+// #ifdef BLYNK
+// void blynk_onTimer(int idx, int v, int up){
+//   DEBUGLN(F("blynk_onTimer"));
 // }
-//
-// void drawDisplay(){
-//   // PumpOn Timer
-//   drawIntLabel(0, "PumpOn:", pumpOn_timer.left() / 1000, true);
-//
-//   // PumpOff Timer
-//   drawIntLabel(1, "PumpOff:", pumpOff_timer.left() / 1000);
-// }
+// #endif
 
+#ifdef JOY_OLED
 void display_onTimer(int idx, int v, int up){
   // drawDisplay();
   char string[15];
@@ -218,9 +230,10 @@ void display_onTimer(int idx, int v, int up){
   }
   ms.display();
 }
+#endif
 
 // void joystick_onUp(/* arguments */) {
-//   Serial.println("joystick_onUp");
+//   DEBUGLN(F("joystick_onUp"));
 //   upBtn_button.event(upBtn_button.EVT_PRESS);
 // }
 //
@@ -228,24 +241,25 @@ void display_onTimer(int idx, int v, int up){
 //   ms.prev(true);
 // }
 
+#ifdef JOY_OLED
 void joystick_onUp(/* arguments */) {
-  Serial.println("joystick_onUp");
+  DEBUGLN(F("joystick_onUp"));
   ms.prev(false);
 }
 void joystick_onDown(/* arguments */) {
-  Serial.println("joystick_onDown");
+  DEBUGLN(F("joystick_onDown"));
   ms.next(false);
 }
 void joystick_onLeft(/* arguments */) {
-  Serial.println("joystick_onLeft");
+  DEBUGLN(F("joystick_onLeft"));
   ms.back();
 }
 void joystick_onRight(/* arguments */) {
-  Serial.println("joystick_onRight");
+  DEBUGLN(F("joystick_onRight"));
   ms.select();
 }
 void joystick_onPush(/* arguments */) {
-  Serial.println("joystick_onPush");
+  DEBUGLN(F("joystick_onPush"));
   ms.select();
 }
 void joystick_reset(/* arguments */) {
@@ -327,38 +341,45 @@ String nmi_pumpOff_format(float value) {
   sprintf(string, "%5ss", dtostrf(value, 0, 1, string2));
   return String(string);
 }
+#endif
 
 void setup() {
   Wire.begin();
 
   //Setup Serial for debugging
   // #ifndef BLYNK
-  Serial.begin(9600);
-  Serial.println("Setup Serial");
+  #ifdef SERIAL_DEBUG
+  Serial.begin(115200);
+  DEBUGLN(F("Setup Serial"));
+  #endif
   // #endif
   #ifdef BLYNK
+  #ifndef BOARD_NODEMCU
   // Set ESP8266 baud rate
-  Serial.println("Setup EspSerial");
+  DEBUGLN(F("Setup EspSerial"));
   EspSerial.begin(ESP8266_BAUD);
   delay(10);
-
-  Serial.println("Blynk.begin");
-  Blynk.begin(auth, wifi, ssid, pass);
   #endif
 
-  // //setup display
-  // display.init();
-  // display.clearDisplay();
-  // display.setNormalDisplay();
-  // display.setPageMode();
-  // drawDisplay();
-  // setup menu
-  Serial.println("menu_renderer.setup_display");
+  // DEBUGLN(F("Blynk.begin"));
+  // #ifndef BOARD_NODEMCU
+  // Blynk.begin(auth, wifi, ssid, pass);
+  // #endif //BOARD_NODEMCU
+  // #ifdef BOARD_NODEMCU
+  // Blynk.begin(auth, ssid, pass);
+  // #endif //BOARD_NODEMCU
+  #endif
+
+  #ifdef JOY_OLED
+  //setup display
+  DEBUGLN(F("menu_renderer.setup_display"));
   menu_renderer.setup_display();
 
-  Menu mu_water("Water Sensor");
   ms.get_root_menu().add_menu(&mu_pump);
+  #ifdef ENABLE_SONIC
+  Menu mu_water("Water Sensor");
   ms.get_root_menu().add_menu(&mu_water);
+  #endif
   // NumericMenuItem(const char *name, SelectFnPtr select_fn, float value, float min_value, float max_value, optional float increment, optional FormatValueFnPtr format_value_fn)
   NumericMenuItem nmi_pumpOn("ON timer", &mu_pumpOn_onSelect, pumpOnSeconds, 60.0, 604800.0, -15.0*60.0, &nmi_pumpOn_format);
   mu_pump.add_item(&nmi_pumpOn);
@@ -367,24 +388,23 @@ void setup() {
   MenuItem mi_pumpTest("Test", &mi_pumpTest_onSelect);
   mu_pump.add_item(&mi_pumpTest);
   // ms.display();
-
-  Blynk.setProperty(pumpOnVPin, "label", "PumpOn");
-  Blynk.setProperty(pumpOnVPin, "color", BLYNK_GREEN);
+  #endif
 
   //setup pump relay
-  Serial.println("pump_relais.begin");
-  pump_relais.begin(pumpPin);
+  DEBUGLN(F("pump_relais.begin"));
+  pump_relais.begin()
+  .led(pumpPin); 
 
   //setup pump bit
-  Serial.println("pump_bit.begin");
+  DEBUGLN(F("pump_bit.begin"));
   pump_bit.begin();
 
-  Serial.println("pump_test_bit.begin");
+  DEBUGLN(F("pump_test_bit.begin"));
   pump_test_bit.begin()
   .onChange(pump_test_bit_onChange);
 
   //setup pump start timer
-  Serial.println("pumpOn_timer.begin");
+  DEBUGLN(F("pumpOn_timer.begin"));
   pumpOn_timer.begin()
     .interval_seconds((uint32_t)pumpOnSeconds)
     .repeat(-1)
@@ -393,34 +413,36 @@ void setup() {
     .start();
 
   //setup pump stop timer
-  Serial.println("pumpOff_timer.begin");
+  DEBUGLN(F("pumpOff_timer.begin"));
   pumpOff_timer.begin()
     .interval_seconds((uint32_t)pumpOffSeconds)
     .onTimer(pumpOff_onTimer);
-
-  Serial.println("sonic_timer.begin");
+  #ifdef ENABLE_SONIC
+  DEBUGLN(F("sonic_timer.begin"));
   sonic_timer.begin()
     .interval_seconds((uint32_t)sonicSeconds)
     .repeat(-1)
     .onTimer(sonic_onTimer)
     .start();
+  #endif
 
-#ifdef BLYNK
-  Serial.println("blynk_timer.begin");
-  blynk_timer.begin()
-    .interval_millis((uint32_t)blynkMillis)
-    .repeat(-1)
-    .onTimer(blynk_onTimer)
-    // .start()
-    ;
-#endif
-
-  Serial.println("display_timer.begin");
+// #ifdef BLYNK
+//   DEBUGLN(F("blynk_timer.begin"));
+//   blynk_timer.begin()
+//     .interval_millis((uint32_t)blynkMillis)
+//     .repeat(-1)
+//     .onTimer(blynk_onTimer)
+//     // .start()
+//     ;
+// #endif
+  #ifdef JOY_OLED
+  DEBUGLN(F("display_timer.begin"));
   display_timer.begin()
     .interval_millis(displayUpdate)
     .repeat(ATM_COUNTER_OFF)
     .onTimer(display_onTimer)
     .start();
+  #endif
 
   //setup water sensor
   // water_sensor.begin(waterPin);
@@ -428,7 +450,7 @@ void setup() {
   // water_sensor.begin(A0).trace(Serial);
 
   //setup pump safety
-  Serial.println("pump_controller.begin");
+  DEBUGLN(F("pump_controller.begin"));
   pump_controller.begin()
     .IF(pump_bit)
     // .AND(water_sensor)
@@ -436,31 +458,41 @@ void setup() {
     .onChange(true, pump_controller_onTrue)
     .onChange(false, pump_controller_onFalse);
 
+  #ifdef JOY_OLED
   //setup joystick
-  Serial.println("joyX_comp.begin");
+  DEBUGLN(F("joyX_comp.begin"));
   joyX_comp.begin(joyXPin, 50)
     // .trace(Serial)
     .threshold(joy_threshold_list, sizeof(joy_threshold_list) )
     .onChange(true, joystick_onChange, (int)'x' )
     .onChange(false, joystick_onChange, (int)'x' );
-  Serial.println("joyY_comp.begin");
+  DEBUGLN(F("joyY_comp.begin"));
   joyY_comp.begin(joyYPin, 50)
     // .trace(Serial)
     .threshold(joy_threshold_list, sizeof(joy_threshold_list) )
     .onChange(true, joystick_onChange, (int)'y' )
     .onChange(false, joystick_onChange, (int)'y' );
+  #endif
+
+  #ifdef BLYNK
+  DEBUGLN(F("Start Blynk Provisioning"));
+  BlynkProvisioning.begin();
+
+  Blynk.setProperty(pumpOnVPin, "label", "PumpOn");
+  Blynk.setProperty(pumpOnVPin, "color", BLYNK_GREEN);
+  #endif
 
   // upBtn_button.begin(upBtnPin)
   //   .onPress(upBtn_onPress)
   //   .trace(Serial)
   //   .repeat();
-  Serial.println("Setup done.");
-  Serial.println("");
+  DEBUGLN(F("Setup done."));
+  DEBUGLN(F(""));
 }
 
 void loop() {
-  automaton.run();
   #ifdef BLYNK
-  Blynk.run();
+  BlynkProvisioning.run();
   #endif
+  automaton.run();
 }

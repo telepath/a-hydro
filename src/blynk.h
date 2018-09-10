@@ -1,33 +1,44 @@
 #ifdef BLYNK
-int sonicVPin = V0;
-int pumpOnVPin = V1;
 
-int pumpVPin = V2;
+#define sonicVPin V0
+#define pumpOnVPin V1
 
-int sonicSecondsVPin = V10;
-int blynkMillisVPin = V11;
+#define pumpVPin V2
 
-int pumpOnMinutesVPin = V12;
-int pumpOffSecondsVPin = V13;
+#define sonicSecondsVPin V10
+#define blynkMillisVPin V11
 
-int tankEmptyVPin = V14;
-int tankFullVPin = V15;
+#define pumpOnMinutesVPin V12
+#define pumpOffSecondsVPin V13
+
+#define tankEmptyVPin V14
+#define tankFullVPin V15
 
 /* Comment this out to disable prints and save space */
+#ifdef SERIAL_DEBUG
 #define BLYNK_PRINT Serial // Defines the object that is used for printing
 #define BLYNK_DEBUG        // Optional, this enables more detailed prints
-// #define BLYNK_NO_BUILTIN   // Disable built-in analog & digital pin operations
-// #define BLYNK_NO_FLOAT     // Disable float operations
+#endif
+#ifdef BOARD_UNO
+#define BLYNK_NO_BUILTIN   // Disable built-in analog & digital pin operations
+#define BLYNK_NO_FLOAT     // Disable float operations
+#endif
 
 // Hardware Serial on Mega, Leonardo, Micro...
+#ifdef BOARD_MEGA
 #define EspSerial Serial1
-
+#endif
+#ifdef BOARD_UNOBLYNK
+#define EspSerial Serial
+#endif
 // or Software Serial on Uno, Nano...
 // #include <SoftwareSerial.h>
 // SoftwareSerial EspSerial(2, 3); // RX, TX
 
 // Your ESP8266 baud rate:
+#ifndef BOARD_NODEMCU
 #define ESP8266_BAUD 115200
+#endif
 
 #define BOARD_TEMPLATE_ID "TMPL10092"
 

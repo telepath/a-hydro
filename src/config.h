@@ -1,14 +1,64 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
+// #define BOARD_UNOBLYNK
+// #define BOARD_UNO
+// #define BOARD_MEGA
+
+#define APP_DEBUG        // Comment this out to disable debug prints
+
+#ifdef BOARD_NODEMCU
+#define BLYNK
+#define USE_NODE_MCU_BOARD
+#define ENABLE_SONIC
+#define SERIAL_DEBUG
+#define DEBUG(ARG) Serial.print(ARG)
+#define DEBUGLN(ARG) Serial.println(ARG)
+// You should get Auth Token in the Blynk App.
+// Go to the Project Settings (nut icon).
+char auth[] = "38d6513c2ef64575af49b3f193697c6e"; //NodeMCU
+#endif
+
+#ifdef BOARD_UNO
+#define SERIAL_DEBUG
+#define DEBUG(ARG) Serial.print(ARG)
+#define DEBUGLN(ARG) Serial.println(ARG)
+#define ENABLE_SONIC
+#define JOY_OLED
+#endif //BOARD_UNO
+
+#ifdef BOARD_UNOBLYNK
+#define DEBUG(ARG)
+#define DEBUGLN(ARG)
+#define ENABLE_SONIC
+#define BLYNK
+// You should get Auth Token in the Blynk App.
+// Go to the Project Settings (nut icon).
+char auth[] = "3af3209925b846b1a5e405e5a7817bca"; //Uno
+#endif //BOARD_UNO
+
+#ifdef BOARD_MEGA
+#define BLYNK
+#define JOY_OLED
+#define ENABLE_SONIC
+#define SERIAL_DEBUG
+#define DEBUG(ARG) Serial.print(ARG)
+#define DEBUGLN(ARG) Serial.println(ARG)
+// You should get Auth Token in the Blynk App.
+// Go to the Project Settings (nut icon).
+char auth[] = "3a4c587bcb6646bc93644f262eb1de20"; //Mega
+#endif //BOARD_MEGA
+
 // digital pins
-int pumpPin = 6;
+#define pumpPin 6
 // int waterPin = 2;
 // int upBtnPin = 8;
-int joyXPin = A0;
-int joyYPin = joyXPin+1;
+#define sonicPin 5
+#define BOARD_LED_PIN               3                     // Set LED pin - if you have a single-color LED attached
+
+#define joyXPin A0
+#define joyYPin joyXPin+1
 bool joyInvert = false;
-int sonicPin = 4;
 
 int sonicSeconds = 30;
 int blynkMillis = 1000;
@@ -16,26 +66,9 @@ int blynkMillis = 1000;
 int tankFull = 5;
 int tankEmpty = 50;
 
-double pumpOnHours = 0.25;
-// int pumpOnMinutes = 60;
-// int pumpOffMinutes = 1;
-// int pumpOnSeconds =30;
-double pumpOffSeconds = 30.0;
-// int pumpOnSeconds = 60 * pumpOnMinutes;
-double pumpOnSeconds = pumpOnHours * 60.0 * 60.0;
-// int pumpOffSeconds = 60 * pumpOffMinutes;
+int pumpOffSeconds = 30;
+int pumpOnSeconds = 0.25 * 60.0 * 60;
 
 int displayUpdate = 250; //ms
-
-#ifdef BLYNK
-// You should get Auth Token in the Blynk App.
-// Go to the Project Settings (nut icon).
-char auth[] = "";
-
-// Your WiFi credentials.
-// Set password to "" for open networks.
-char ssid[] = "";
-char pass[] = "";
-#endif
 
 #endif
