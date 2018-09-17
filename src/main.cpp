@@ -1,9 +1,5 @@
 #include "main.h"
 
-#ifdef ENABLE_SONIC
-Ultrasonic ultrasonic(sonicPin);
-#endif
-
 void vWrite(int pin, int value) {
   #ifdef BLYNK
   DEBUG(F("Write "));
@@ -46,6 +42,27 @@ BLYNK_READ_DEFAULT()
     value = pumpOffSeconds;
   } else if (pin==pumpVPin) {
     value = pump_relais.state();
+  } else if (pin==lightIrVPin) {
+    if (value = SunSensor.ReadIR()) {
+      if (value > 65000) {
+        value = -1;
+      }
+    } else {
+      if (sunlight_timer.state() == sunlight_timer.IDLE) {
+        DEBUGLN(F("reinitialize sunlight sensor"));
+        sunlight_timer.start();
+      }
+    }
+  } else if (pin==lightVsVPin) {
+    value = SunSensor.ReadVisible();
+    if (value > 65000) {
+      value = -1;
+    }
+  } else if (pin==lightUvVPin) {
+    value = SunSensor.ReadUV();
+    if (value > 65000) {
+      value = -1;
+    }
   }
   vWrite(pin, value);
 }
@@ -74,7 +91,14 @@ BLYNK_WRITE_DEFAULT()
     #endif
   } else if (pin==pumpOnMinutesVPin) {
     pumpOnSeconds = param.asInt() * 60.0;
-    pumpOn_timer.interval_seconds(pumpOnSeconds);
+    if (pumpOnSeconds <=0 ) {
+      pumpOn_timer.stop();
+    } else {
+      pumpOn_timer.interval_seconds(pumpOnSeconds);
+      if (pumpOn_timer.state() == pumpOn_timer.IDLE) {
+        pumpOn_timer.start();
+      }
+    }
   } else if (pin==sonicSecondsVPin) {
     sonicSeconds = param.asInt();
     #ifdef ENABLE_SONIC
@@ -82,7 +106,14 @@ BLYNK_WRITE_DEFAULT()
     #endif
   } else if (pin==pumpOffSecondsVPin) {
     pumpOffSeconds = param.asDouble();
-    pumpOff_timer.interval_seconds(pumpOffSeconds);
+    if (pumpOffSeconds <= 0 ) {
+      pumpOff_timer.stop();
+    } else {
+      pumpOff_timer.interval_seconds(pumpOffSeconds);
+      if (pumpOff_timer.state() == pumpOff_timer.IDLE) {
+        pumpOff_timer.start();
+      }
+    }
   } else if (pin==pumpVPin) {
     if (param.asInt()==0) {
       pump_test_bit.off();
@@ -231,6 +262,19 @@ void display_onTimer(int idx, int v, int up){
   ms.display();
 }
 #endif
+#ifdef ENABLE_SUNLIGHT
+void sunlight_onTimer(int idx, int v, int up){
+  DEBUGLN(F("sunlight_onTimer"));
+  DEBUGLN(F("Sunlight.Begin()"));
+  if (SunSensor.Begin()) {
+    DEBUGLN(F("Sunlight sensor setup successful"));
+    sunlight_timer.stop();
+  }
+  else {
+    DEBUGLN(F("Sunlight sensor setup unsuccessful. Wait for retry."));
+  }
+}
+#endif
 
 // void joystick_onUp(/* arguments */) {
 //   DEBUGLN(F("joystick_onUp"));
@@ -352,6 +396,7 @@ void setup() {
   Serial.begin(115200);
   DEBUGLN(F("Setup Serial"));
   #endif
+
   // #endif
   #ifdef BLYNK
   #ifndef BOARD_NODEMCU
@@ -392,8 +437,8 @@ void setup() {
 
   //setup pump relay
   DEBUGLN(F("pump_relais.begin"));
-  pump_relais.begin()
-  .led(pumpPin); 
+  pump_relais.begin();
+  // .led(pumpPin);
 
   //setup pump bit
   DEBUGLN(F("pump_bit.begin"));
@@ -407,7 +452,7 @@ void setup() {
   DEBUGLN(F("pumpOn_timer.begin"));
   pumpOn_timer.begin()
     .interval_seconds((uint32_t)pumpOnSeconds)
-    .repeat(-1)
+    .repeat(ATM_COUNTER_OFF)
     .onTimer(pumpOn_onTimer)
     // .onChange(pumpOn_onChange)
     .start();
@@ -417,11 +462,12 @@ void setup() {
   pumpOff_timer.begin()
     .interval_seconds((uint32_t)pumpOffSeconds)
     .onTimer(pumpOff_onTimer);
+
   #ifdef ENABLE_SONIC
   DEBUGLN(F("sonic_timer.begin"));
   sonic_timer.begin()
     .interval_seconds((uint32_t)sonicSeconds)
-    .repeat(-1)
+    .repeat(ATM_COUNTER_OFF)
     .onTimer(sonic_onTimer)
     .start();
   #endif
@@ -441,6 +487,15 @@ void setup() {
     .interval_millis(displayUpdate)
     .repeat(ATM_COUNTER_OFF)
     .onTimer(display_onTimer)
+    .start();
+  #endif
+
+  #ifdef ENABLE_SUNLIGHT
+  DEBUGLN(F("sunlight_timer.begin"));
+  sunlight_timer.begin()
+    .interval_millis(5000)
+    .repeat(ATM_COUNTER_OFF)
+    .onTimer(sunlight_onTimer)
     .start();
   #endif
 

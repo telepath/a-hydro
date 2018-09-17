@@ -11,6 +11,7 @@
 #define BLYNK
 #define USE_NODE_MCU_BOARD
 #define ENABLE_SONIC
+#define ENABLE_SUNLIGHT
 #define SERIAL_DEBUG
 #define DEBUG(ARG) Serial.print(ARG)
 #define DEBUGLN(ARG) Serial.println(ARG)
@@ -41,6 +42,7 @@ char auth[] = "3af3209925b846b1a5e405e5a7817bca"; //Uno
 #define BLYNK
 #define JOY_OLED
 #define ENABLE_SONIC
+#define ENABLE_SUNLIGHT
 #define SERIAL_DEBUG
 #define DEBUG(ARG) Serial.print(ARG)
 #define DEBUGLN(ARG) Serial.println(ARG)
@@ -53,7 +55,7 @@ char auth[] = "3a4c587bcb6646bc93644f262eb1de20"; //Mega
 #define pumpPin 6
 // int waterPin = 2;
 // int upBtnPin = 8;
-#define sonicPin 5
+#define sonicPin D5
 #define BOARD_LED_PIN               3                     // Set LED pin - if you have a single-color LED attached
 
 #define joyXPin A0

@@ -5,6 +5,10 @@
 
 #define pumpVPin V2
 
+#define lightIrVPin V3
+#define lightVsVPin V4
+#define lightUvVPin V5
+
 #define sonicSecondsVPin V10
 #define blynkMillisVPin V11
 

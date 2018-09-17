@@ -7,6 +7,9 @@
 #ifdef ENABLE_SONIC
 #include <Ultrasonic.h>
 #endif
+#ifdef ENABLE_SUNLIGHT
+#include "SI114X.h"
+#endif
 #ifdef BLYNK
 #ifndef BOARD_NODEMCU
 // #include <BlynkSimpleShieldEsp8266.h>
@@ -34,6 +37,11 @@ Atm_timer display_timer;
 #endif
 #ifdef ENABLE_SONIC
 Atm_timer sonic_timer;
+Ultrasonic ultrasonic(sonicPin);
+#endif
+#ifdef ENABLE_SUNLIGHT
+SI114X SunSensor = SI114X();
+Atm_timer sunlight_timer;
 #endif
 // #ifdef BLYNK
 // Atm_timer blynk_timer;
