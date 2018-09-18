@@ -56,11 +56,20 @@
   #define BOARD_BUTTON_PIN            0
   #define BOARD_BUTTON_ACTIVE_LOW     true
 
+  #define ENABLE_CHAINABLE_LED
+#ifdef ENABLE_CHAINABLE_LED
+  #define BOARD_LED_SER_PIN1          D7
+  #define BOARD_LED_SER_PIN2          D8
+  #define BOARD_NUM_LEDS              1
+#endif
+#ifndef ENABLE_CHAINABLE_LED
+  #define BOARD_LED_PIN               7                     // Set LED pin - if you have a single-color LED attached
+#endif
   // #define BOARD_LED_PIN_R             D8
   // #define BOARD_LED_PIN_G             D7
   // #define BOARD_LED_PIN_B             D6
   #define BOARD_LED_INVERSE           false
-  #define BOARD_LED_BRIGHTNESS        32
+  #define BOARD_LED_BRIGHTNESS        8
 
 #elif defined(USE_SPARKFUN_BLYNK_BOARD)
 

@@ -437,8 +437,8 @@ void setup() {
 
   //setup pump relay
   DEBUGLN(F("pump_relais.begin"));
-  pump_relais.begin();
-  // .led(pumpPin);
+  pump_relais.begin()
+    .led(pumpPin);
 
   //setup pump bit
   DEBUGLN(F("pump_bit.begin"));

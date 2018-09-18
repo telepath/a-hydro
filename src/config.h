@@ -12,6 +12,7 @@
 #define USE_NODE_MCU_BOARD
 #define ENABLE_SONIC
 #define ENABLE_SUNLIGHT
+#define ENABLE_CHAINABLE_LED
 #define SERIAL_DEBUG
 #define DEBUG(ARG) Serial.print(ARG)
 #define DEBUGLN(ARG) Serial.println(ARG)
@@ -52,11 +53,10 @@ char auth[] = "3a4c587bcb6646bc93644f262eb1de20"; //Mega
 #endif //BOARD_MEGA
 
 // digital pins
-#define pumpPin 6
+#define pumpPin D6
 // int waterPin = 2;
 // int upBtnPin = 8;
 #define sonicPin D5
-#define BOARD_LED_PIN               3                     // Set LED pin - if you have a single-color LED attached
 
 #define joyXPin A0
 #define joyYPin joyXPin+1
