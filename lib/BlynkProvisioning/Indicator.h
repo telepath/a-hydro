@@ -8,7 +8,7 @@
  *
  **************************************************************/
 
-#ifdef ENABLE_CHAINABLE_LED
+#ifdef BOARD_CHAINABLE_LED
   #include <ChainableLED.h>
   ChainableLED leds(BOARD_LED_SER_PIN1, BOARD_LED_SER_PIN2, BOARD_NUM_LEDS);
 #endif

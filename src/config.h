@@ -12,8 +12,11 @@
 #define USE_NODE_MCU_BOARD
 #define ENABLE_SONIC
 #define ENABLE_SUNLIGHT
-#define ENABLE_CHAINABLE_LED
+// #define BOARD_CHAINABLE_LED
+#define BOARD_LED_BUTTON
+#define ENABLE_OTA
 #define SERIAL_DEBUG
+#define BLYNK_PRINT Serial
 #define DEBUG(ARG) Serial.print(ARG)
 #define DEBUGLN(ARG) Serial.println(ARG)
 // You should get Auth Token in the Blynk App.
@@ -53,17 +56,20 @@ char auth[] = "3a4c587bcb6646bc93644f262eb1de20"; //Mega
 #endif //BOARD_MEGA
 
 // digital pins
-#define pumpPin D6
+#define pumpPin D3
 // int waterPin = 2;
 // int upBtnPin = 8;
-#define sonicPin D5
+#define sonicPin D8
 
 #define joyXPin A0
 #define joyYPin joyXPin+1
 bool joyInvert = false;
 
 int sonicSeconds = 30;
+int sonicSecondsFast = 10;
+
 int blynkMillis = 1000;
+int sunlightSeconds = 60;
 
 int tankFull = 5;
 int tankEmpty = 50;

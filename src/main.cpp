@@ -11,6 +11,17 @@ void vWrite(int pin, int value) {
   #endif
 }
 
+void vWrite(int pin, double value) {
+  #ifdef BLYNK
+  DEBUG(F("Write "));
+  DEBUG(value);
+  DEBUG(F(" to pin "));
+  DEBUG(pin);
+  DEBUGLN(F(""));
+  Blynk.virtualWrite(pin, value);
+  #endif
+}
+
 #ifdef BLYNK
 #ifndef BOARD_NODEMCU
 ESP8266 wifi(&EspSerial);
@@ -48,9 +59,9 @@ BLYNK_READ_DEFAULT()
         value = -1;
       }
     } else {
-      if (sunlight_timer.state() == sunlight_timer.IDLE) {
+      if (sunlight_init_timer.state() == sunlight_init_timer.IDLE) {
         DEBUGLN(F("reinitialize sunlight sensor"));
-        sunlight_timer.start();
+        sunlight_init_timer.start();
       }
     }
   } else if (pin==lightVsVPin) {
@@ -59,8 +70,8 @@ BLYNK_READ_DEFAULT()
       value = -1;
     }
   } else if (pin==lightUvVPin) {
-    value = SunSensor.ReadUV();
-    if (value > 65000) {
+    value = SunSensor.ReadUV() / 100.0;
+    if (value > 650) {
       value = -1;
     }
   }
@@ -183,6 +194,9 @@ void pumpOn_onTimer(int idx, int v, int up){
   DEBUGLN(F("pumpOn_onTimer"));
   pump_bit.on();
   pumpOff_timer.start();
+  #ifdef ENABLE_SONIC
+  sonic_timer.interval_seconds(sonicSecondsFast);
+  #endif
   #ifdef BLYNK
   Blynk.setProperty(pumpOnVPin, "label", "PumpOff");
   Blynk.setProperty(pumpOnVPin, "color", BLYNK_DARK_BLUE);
@@ -193,6 +207,9 @@ void pumpOn_onTimer(int idx, int v, int up){
 void pumpOff_onTimer(int idx, int v, int up){
   DEBUGLN(F("pumpOff_onTimer"));
   pump_bit.off();
+  #ifdef ENABLE_SONIC
+  sonic_timer.interval_seconds(sonicSeconds);
+  #endif
   #ifdef BLYNK
   Blynk.setProperty(pumpOnVPin, "label", "PumpOn");
   Blynk.setProperty(pumpOnVPin, "color", BLYNK_GREEN);
@@ -263,16 +280,24 @@ void display_onTimer(int idx, int v, int up){
 }
 #endif
 #ifdef ENABLE_SUNLIGHT
-void sunlight_onTimer(int idx, int v, int up){
-  DEBUGLN(F("sunlight_onTimer"));
+void sunlight_init_onTimer(int idx, int v, int up){
+  DEBUGLN(F("sunlight_init_onTimer"));
   DEBUGLN(F("Sunlight.Begin()"));
   if (SunSensor.Begin()) {
     DEBUGLN(F("Sunlight sensor setup successful"));
-    sunlight_timer.stop();
+    sunlight_init_timer.stop();
+    sunlight_timer.start();
   }
   else {
     DEBUGLN(F("Sunlight sensor setup unsuccessful. Wait for retry."));
   }
+}
+
+void sunlight_onTimer(int idx, int v, int up){
+  DEBUGLN(F("sunlight_onTimer"));
+  vWrite(lightIrVPin, SunSensor.ReadIR());
+  vWrite(lightVsVPin, SunSensor.ReadVisible());
+  vWrite(lightUvVPin, SunSensor.ReadUV() / 100.0);
 }
 #endif
 
@@ -491,12 +516,16 @@ void setup() {
   #endif
 
   #ifdef ENABLE_SUNLIGHT
-  DEBUGLN(F("sunlight_timer.begin"));
-  sunlight_timer.begin()
+  DEBUGLN(F("sunlight_init_timer.begin"));
+  sunlight_init_timer.begin()
     .interval_millis(5000)
     .repeat(ATM_COUNTER_OFF)
-    .onTimer(sunlight_onTimer)
+    .onTimer(sunlight_init_onTimer)
     .start();
+  sunlight_timer.begin()
+    .interval_seconds(sunlightSeconds)
+    .repeat(ATM_COUNTER_OFF)
+    .onTimer(sunlight_onTimer);
   #endif
 
   //setup water sensor
@@ -536,6 +565,9 @@ void setup() {
   Blynk.setProperty(pumpOnVPin, "label", "PumpOn");
   Blynk.setProperty(pumpOnVPin, "color", BLYNK_GREEN);
   #endif
+
+  // DEBUGLN(F("EasyOta.setup"));
+  // EasyOta.setup();
 
   // upBtn_button.begin(upBtnPin)
   //   .onPress(upBtn_onPress)

@@ -18,8 +18,8 @@
 #include <ESP8266WiFi.h>
 #include <BlynkSimpleEsp8266.h>
 #endif //BOARD_NODEMCU
-#include "BlynkProvisioning.h"
 #include "blynk.h"
+#include "BlynkProvisioning.h"
 #endif //BLYNK
 #ifdef JOY_OLED
 #include <MenuSystem.h>
@@ -41,6 +41,7 @@ Ultrasonic ultrasonic(sonicPin);
 #endif
 #ifdef ENABLE_SUNLIGHT
 SI114X SunSensor = SI114X();
+Atm_timer sunlight_init_timer;
 Atm_timer sunlight_timer;
 #endif
 // #ifdef BLYNK

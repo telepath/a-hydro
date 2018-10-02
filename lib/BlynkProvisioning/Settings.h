@@ -2,10 +2,6 @@
  * General options
  */
 
-#ifdef BOARD_NODEMCU
-#define USE_NODE_MCU_BOARD
-#endif
-
 #define BOARD_FIRMWARE_VERSION        "1.0.1"
 #define BOARD_HARDWARE_VERSION        "1.0.0"
 
@@ -53,52 +49,33 @@
   #warning "NodeMCU board selected"
 
   // Example configuration for NodeMCU v1.0 Board
-  #define BOARD_BUTTON_PIN            0
   #define BOARD_BUTTON_ACTIVE_LOW     true
 
-  #define ENABLE_CHAINABLE_LED
-#ifdef ENABLE_CHAINABLE_LED
+#if defined(BOARD_CHAINABLE_LED)
+  #warning "Chainable LED configured"
   #define BOARD_LED_SER_PIN1          D7
   #define BOARD_LED_SER_PIN2          D8
   #define BOARD_NUM_LEDS              1
-#endif
-#ifndef ENABLE_CHAINABLE_LED
-  #define BOARD_LED_PIN               7                     // Set LED pin - if you have a single-color LED attached
-#endif
-  // #define BOARD_LED_PIN_R             D8
-  // #define BOARD_LED_PIN_G             D7
-  // #define BOARD_LED_PIN_B             D6
-  #define BOARD_LED_INVERSE           false
-  #define BOARD_LED_BRIGHTNESS        8
-
-#elif defined(USE_SPARKFUN_BLYNK_BOARD)
-
-  #warning "Sparkfun Blynk board selected"
-
-  // Example configuration for SparkFun Blynk Board
+  #define BOARD_BUTTON_PIN            D3
+#elif defined(BOARD_LED_BUTTON)
+  #warning "LED button configured"
+  #define BOARD_LED_PIN               D5                     // Set LED pin - if you have a single-color LED attached
+  #define BOARD_BUTTON_PIN            D6
+#else //LED
+  #warning "LED and button configured"
+  // #define BOARD_LED_PIN               D7                     // Set LED pin - if you have a single-color LED attached
   #define BOARD_BUTTON_PIN            0
-  #define BOARD_BUTTON_ACTIVE_LOW     true
+  // #define BOARD_BUTTON_PIN            D3
+  #define BOARD_LED_PIN_R             D8
+  #define BOARD_LED_PIN_G             D7
+  #define BOARD_LED_PIN_B             D9
+#endif //LED
+#define BOARD_LED_INVERSE           false
+#define BOARD_LED_BRIGHTNESS        8
 
-  #define BOARD_LED_PIN_WS2812        4
-  #define BOARD_LED_BRIGHTNESS        32
-
-#elif defined(USE_WITTY_CLOUD_BOARD)
-
-  #warning "Witty Cloud board selected"
-
-  // Example configuration for Witty cloud Board
-  #define BOARD_BUTTON_PIN            4
-  #define BOARD_BUTTON_ACTIVE_LOW     true
-
-  #define BOARD_LED_PIN_R             15
-  #define BOARD_LED_PIN_G             12
-  #define BOARD_LED_PIN_B             13
-  #define BOARD_LED_INVERSE           false
-  #define BOARD_LED_BRIGHTNESS        32
-
-#else
+#else //BOARD
   #error "No board selected"
-#endif
+#endif //BOARD
 
 
 /*
