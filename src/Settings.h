@@ -1,6 +1,8 @@
 /*
  * General options
  */
+#ifndef SETTINGS_H
+#define SETTINGS_H
 
 #define BOARD_FIRMWARE_VERSION        "1.0.1"
 #define BOARD_HARDWARE_VERSION        "1.0.0"
@@ -77,6 +79,12 @@
   #error "No board selected"
 #endif //BOARD
 
+#define BLYNK_GREEN     "#23C48E"
+#define BLYNK_BLUE      "#04C0F8"
+#define BLYNK_YELLOW    "#ED9D00"
+#define BLYNK_RED       "#D3435C"
+#define BLYNK_DARK_BLUE "#5F7CD8"
+
 
 /*
  * Advanced options
@@ -102,4 +110,6 @@
   #define DEBUG_PRINT(...) BLYNK_LOG1(__VA_ARGS__)
 #else
   #define DEBUG_PRINT(...)
+#endif
+
 #endif

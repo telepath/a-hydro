@@ -1,28 +1,21 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
-// #define BOARD_UNOBLYNK
-// #define BOARD_UNO
-// #define BOARD_MEGA
-
-#define APP_DEBUG        // Comment this out to disable debug prints
-
 #ifdef BOARD_NODEMCU
+#include <Arduino.h>
+#include <BlynkSimpleEsp8266.h>
+
 #define BLYNK
 #define USE_NODE_MCU_BOARD
 #define ENABLE_SONIC
 #define ENABLE_SUNLIGHT
-// #define BOARD_CHAINABLE_LED
 #define BOARD_LED_BUTTON
 #define ENABLE_OTA
 #define SERIAL_DEBUG
-#define BLYNK_PRINT Serial
-#define DEBUG(ARG) Serial.print(ARG)
-#define DEBUGLN(ARG) Serial.println(ARG)
-// You should get Auth Token in the Blynk App.
-// Go to the Project Settings (nut icon).
-char auth[] = "38d6513c2ef64575af49b3f193697c6e"; //NodeMCU
-#endif
+
+#include "Settings.h" // Custom BlynkProvisioning settings
+
+#endif //BOARD_NODEMCU
 
 #ifdef BOARD_UNO
 #define SERIAL_DEBUG
@@ -37,9 +30,8 @@ char auth[] = "38d6513c2ef64575af49b3f193697c6e"; //NodeMCU
 #define DEBUGLN(ARG)
 #define ENABLE_SONIC
 #define BLYNK
-// You should get Auth Token in the Blynk App.
-// Go to the Project Settings (nut icon).
-char auth[] = "3af3209925b846b1a5e405e5a7817bca"; //Uno
+#define BLYNK_NO_BUILTIN   // Disable built-in analog & digital pin operations
+#define BLYNK_NO_FLOAT     // Disable float operations
 #endif //BOARD_UNO
 
 #ifdef BOARD_MEGA
@@ -50,10 +42,57 @@ char auth[] = "3af3209925b846b1a5e405e5a7817bca"; //Uno
 #define SERIAL_DEBUG
 #define DEBUG(ARG) Serial.print(ARG)
 #define DEBUGLN(ARG) Serial.println(ARG)
-// You should get Auth Token in the Blynk App.
-// Go to the Project Settings (nut icon).
-char auth[] = "3a4c587bcb6646bc93644f262eb1de20"; //Mega
 #endif //BOARD_MEGA
+
+// Hardware Serial on Mega, Leonardo, Micro...
+#ifdef BOARD_MEGA
+#define EspSerial Serial1
+#endif
+#ifdef BOARD_UNOBLYNK
+#define EspSerial Serial
+#endif
+// or Software Serial on Uno, Nano...
+// #include <SoftwareSerial.h>
+// SoftwareSerial EspSerial(2, 3); // RX, TX
+
+// Your ESP8266 baud rate:
+#ifndef BOARD_NODEMCU
+#define ESP8266_BAUD 115200
+#endif
+
+#ifndef SERIAL_DEBUG
+
+  #define DEBUG
+  #define DEBUGLN
+#endif
+
+#ifdef BLYNK
+  enum pins {
+    SONIC,          //vPin 0
+    PUMP_TIME,      //vPin 1
+    PUMP_STATE,     //vPin 2
+    LIGHT_IR,       //vPin 3
+    LIGHT_VS,       //vPin 4
+    LIGHT_UV,       //vPin 5
+    EMPTY1,         //vPin 6
+    EMPTY2,         //vPin 7
+    EMPTY3,         //vPin 8
+    TERMINAL,       //vPin 9
+    SETTINGS_SONIC_SECONDS, //vPin 10
+    SETTINGS_BLYNK_MILLIS,  //vPin 11
+    SETTINGS_PUMP_ON_MIN,   //vPin 12
+    SETTINGS_PUMP_OFF_SEC,  //vPin 13
+    SETTINGS_TANK_EMPTY,    //vPin 14
+    SETTINGS_TANK_FULL,     //vPin 15
+    PIN_NUM         //last item, number of pins
+  };
+#endif
+
+WidgetTerminal terminal(TERMINAL);  // Comment this out if you won't use the terminal widget
+
+#define BLYNK_PRINT terminal
+#define DEBUG(ARG) terminal.print(ARG)
+#define DEBUGLN(ARG) terminal.println(ARG)
 
 // digital pins
 #define pumpPin D3

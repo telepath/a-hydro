@@ -1,4 +1,5 @@
 #include "main.h"
+#include <BlynkSimpleEsp8266.h>
 
 void vWrite(int pin, int value) {
   #ifdef BLYNK
@@ -22,6 +23,15 @@ void vWrite(int pin, double value) {
   #endif
 }
 
+void vWrite(int pin, BlynkParam &param) {
+  DEBUG(F("Write "));
+  DEBUG(param.asString());
+  DEBUG(F(" to pin "));
+  DEBUG(pin);
+  DEBUGLN(F(""));
+  Blynk.virtualWrite(pin, param);
+}
+
 #ifdef BLYNK
 #ifndef BOARD_NODEMCU
 ESP8266 wifi(&EspSerial);
@@ -31,29 +41,29 @@ BLYNK_READ_DEFAULT()
 {
   int pin = request.pin;      // Which exactly pin is handled?
   int value = 0;
-  if (pin==sonicVPin) {
+  if (pin==SONIC) {
     write_tankLevel();
-  } else if (pin==pumpOnVPin) {
+  } else if (pin==PUMP_TIME) {
     if (pump_bit.state()) {
       value = pumpOff_timer.left()/1000;
     } else {
       value = pumpOn_timer.left()/1000;
     }
-  } else if (pin==tankFullVPin) {
+  } else if (pin==SETTINGS_TANK_FULL) {
     value = tankFull;
-  } else if (pin==tankEmptyVPin) {
+  } else if (pin==SETTINGS_TANK_EMPTY) {
     value = tankEmpty;
-  } else if (pin==blynkMillisVPin) {
+  } else if (pin==SETTINGS_BLYNK_MILLIS) {
     value = blynkMillis;
-  } else if (pin==pumpOnMinutesVPin) {
+  } else if (pin==SETTINGS_PUMP_ON_MIN) {
     value = pumpOnSeconds / 60;
-  } else if (pin==sonicSecondsVPin) {
+  } else if (pin==SETTINGS_SONIC_SECONDS) {
     value = sonicSeconds;
-  } else if (pin==pumpOffSecondsVPin) {
+  } else if (pin==SETTINGS_PUMP_OFF_SEC) {
     value = pumpOffSeconds;
-  } else if (pin==pumpVPin) {
+  } else if (pin==PUMP_STATE) {
     value = pump_relais.state();
-  } else if (pin==lightIrVPin) {
+  } else if (pin==LIGHT_IR) {
     if (value = SunSensor.ReadIR()) {
       if (value > 65000) {
         value = -1;
@@ -64,12 +74,12 @@ BLYNK_READ_DEFAULT()
         sunlight_init_timer.start();
       }
     }
-  } else if (pin==lightVsVPin) {
+  } else if (pin==LIGHT_VS) {
     value = SunSensor.ReadVisible();
     if (value > 65000) {
       value = -1;
     }
-  } else if (pin==lightUvVPin) {
+  } else if (pin==LIGHT_UV) {
     value = SunSensor.ReadUV() / 100.0;
     if (value > 650) {
       value = -1;
@@ -87,20 +97,20 @@ BLYNK_WRITE_DEFAULT()
   DEBUG(pin);
   DEBUGLN(F(""));
 
-  if (pin==tankFullVPin) {
+  if (pin==SETTINGS_TANK_FULL) {
     tankFull = param.asInt();
-    Blynk.setProperty(sonicVPin, "max", tankFull);
-  } else if (pin==tankEmptyVPin) {
+    Blynk.setProperty(SONIC, "max", tankFull);
+  } else if (pin==SETTINGS_TANK_EMPTY) {
     tankEmpty = param.asInt();
     write_tankLevel();
-    Blynk.setProperty(sonicVPin, "min", tankEmpty);
-  } else if (pin==blynkMillisVPin) {
+    Blynk.setProperty(SONIC, "min", tankEmpty);
+  } else if (pin==SETTINGS_BLYNK_MILLIS) {
     blynkMillis = param.asInt();
     write_tankLevel();
     #ifdef BLYNK
     // blynk_timer.interval_seconds((uint32_t)blynkMillis);
     #endif
-  } else if (pin==pumpOnMinutesVPin) {
+  } else if (pin==SETTINGS_PUMP_ON_MIN) {
     pumpOnSeconds = param.asInt() * 60.0;
     if (pumpOnSeconds <=0 ) {
       pumpOn_timer.stop();
@@ -110,12 +120,12 @@ BLYNK_WRITE_DEFAULT()
         pumpOn_timer.start();
       }
     }
-  } else if (pin==sonicSecondsVPin) {
+  } else if (pin==SETTINGS_SONIC_SECONDS) {
     sonicSeconds = param.asInt();
     #ifdef ENABLE_SONIC
     sonic_timer.interval_seconds(sonicSeconds);
     #endif
-  } else if (pin==pumpOffSecondsVPin) {
+  } else if (pin==SETTINGS_PUMP_OFF_SEC) {
     pumpOffSeconds = param.asDouble();
     if (pumpOffSeconds <= 0 ) {
       pumpOff_timer.stop();
@@ -125,7 +135,7 @@ BLYNK_WRITE_DEFAULT()
         pumpOff_timer.start();
       }
     }
-  } else if (pin==pumpVPin) {
+  } else if (pin==PUMP_STATE) {
     if (param.asInt()==0) {
       pump_test_bit.off();
     } else {
@@ -135,12 +145,13 @@ BLYNK_WRITE_DEFAULT()
 }
 
 void blynk_writeConfig() {
-  vWrite(sonicSecondsVPin, sonicSeconds);
-  vWrite(blynkMillisVPin, blynkMillis);
-  vWrite(pumpOnMinutesVPin, pumpOnSeconds / 60);
-  vWrite(pumpOffSecondsVPin, pumpOffSeconds);
-  vWrite(tankEmptyVPin, tankEmpty);
-  vWrite(tankFullVPin, tankFull);
+  vWrite(SETTINGS_SONIC_SECONDS, sonicSeconds);
+  vWrite(SETTINGS_BLYNK_MILLIS, blynkMillis);
+  vWrite(SETTINGS_PUMP_ON_MIN, pumpOnSeconds / 60);
+  vWrite(SETTINGS_PUMP_OFF_SEC, pumpOffSeconds);
+  vWrite(SETTINGS_TANK_EMPTY, tankEmpty);
+  vWrite(SETTINGS_TANK_FULL, tankFull);
+  vWrite(PUMP_STATE, 0);
 }
 
 BLYNK_CONNECTED() {
@@ -172,7 +183,7 @@ void pump_controller_onTrue(int idx, int v, int up){
   // display.clearDisplay();
   pump_relais.on();
   #ifdef BLYNK
-  vWrite(pumpVPin,pump_relais.state());
+  vWrite(PUMP_STATE,pump_relais.state());
   #endif
   write_tankLevel();
 }
@@ -185,7 +196,7 @@ void pump_controller_onFalse(int idx, int v, int up){
   #endif
   pump_relais.off();
   #ifdef BLYNK
-  vWrite(pumpVPin,pump_relais.state());
+  vWrite(PUMP_STATE,pump_relais.state());
   #endif
   write_tankLevel();
 }
@@ -198,9 +209,9 @@ void pumpOn_onTimer(int idx, int v, int up){
   sonic_timer.interval_seconds(sonicSecondsFast);
   #endif
   #ifdef BLYNK
-  Blynk.setProperty(pumpOnVPin, "label", "PumpOff");
-  Blynk.setProperty(pumpOnVPin, "color", BLYNK_DARK_BLUE);
-  vWrite(pumpOnVPin,pumpOffSeconds);
+  Blynk.setProperty(PUMP_TIME, "label", "PumpOff");
+  Blynk.setProperty(PUMP_TIME, "color", BLYNK_DARK_BLUE);
+  vWrite(PUMP_TIME,pumpOffSeconds);
   #endif
 }
 
@@ -211,9 +222,9 @@ void pumpOff_onTimer(int idx, int v, int up){
   sonic_timer.interval_seconds(sonicSeconds);
   #endif
   #ifdef BLYNK
-  Blynk.setProperty(pumpOnVPin, "label", "PumpOn");
-  Blynk.setProperty(pumpOnVPin, "color", BLYNK_GREEN);
-  vWrite(pumpOnVPin, pumpOnSeconds);
+  Blynk.setProperty(PUMP_TIME, "label", "PumpOn");
+  Blynk.setProperty(PUMP_TIME, "color", BLYNK_GREEN);
+  vWrite(PUMP_TIME, pumpOnSeconds);
   #endif
 }
 #ifdef ENABLE_SONIC
@@ -236,7 +247,7 @@ void write_tankLevel() {
   DEBUG(F("/"));
   DEBUG(tankFull);
   DEBUGLN(F(""));
-  vWrite(sonicVPin, ((double)tankEmpty - (double)cm - (double)tankFull) / ((double)tankEmpty-(double)tankFull) * 100);
+  vWrite(SONIC, ((double)tankEmpty - (double)cm - (double)tankFull) / ((double)tankEmpty-(double)tankFull) * 100);
   #endif
   #endif
 }
@@ -247,13 +258,13 @@ void blynk_sendPump() {
     DEBUG(pumpOn_timer.left());
     DEBUGLN(F(""));
     #ifdef BLYNK
-    Blynk.virtualWrite(pumpOnVPin, pumpOn_timer.left()/1000);
+    Blynk.virtualWrite(PUMP_TIME, pumpOn_timer.left()/1000);
     #endif
   } else {
     DEBUG(F("pumpOff_timer.left = "));
     DEBUG(pumpOff_timer.left());
     #ifdef BLYNK
-    Blynk.virtualWrite(pumpOnVPin, pumpOff_timer.left()/1000);
+    Blynk.virtualWrite(PUMP_TIME, pumpOff_timer.left()/1000);
     #endif
   }
 }
@@ -295,9 +306,9 @@ void sunlight_init_onTimer(int idx, int v, int up){
 
 void sunlight_onTimer(int idx, int v, int up){
   DEBUGLN(F("sunlight_onTimer"));
-  vWrite(lightIrVPin, SunSensor.ReadIR());
-  vWrite(lightVsVPin, SunSensor.ReadVisible());
-  vWrite(lightUvVPin, SunSensor.ReadUV() / 100.0);
+  vWrite(LIGHT_IR, SunSensor.ReadIR());
+  vWrite(LIGHT_VS, SunSensor.ReadVisible());
+  vWrite(LIGHT_UV, SunSensor.ReadUV() / 100.0);
 }
 #endif
 
@@ -562,8 +573,8 @@ void setup() {
   DEBUGLN(F("Start Blynk Provisioning"));
   BlynkProvisioning.begin();
 
-  Blynk.setProperty(pumpOnVPin, "label", "PumpOn");
-  Blynk.setProperty(pumpOnVPin, "color", BLYNK_GREEN);
+  Blynk.setProperty(PUMP_TIME, "label", "PumpOn");
+  Blynk.setProperty(PUMP_TIME, "color", BLYNK_GREEN);
   #endif
 
   // DEBUGLN(F("EasyOta.setup"));
