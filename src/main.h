@@ -1,28 +1,58 @@
 #ifndef MAIN_H
 #define MAIN_H
 
-#include <Arduino.h>
 #include <Wire.h>
 #include <Automaton.h>
-#include <MenuSystem.h>
-
-#include "atm_vbutton.h"
-#include "menu.h"
 #include "config.h"
+#ifdef ENABLE_SONIC
+#include <Ultrasonic.h>
+#endif
+#ifdef ENABLE_SUNLIGHT
+#include "SI114X.h"
+#endif
+#ifdef BLYNK
+#ifndef BOARD_NODEMCU
+// #include <BlynkSimpleShieldEsp8266.h>
+#endif
+#ifdef BOARD_NODEMCU
+#include <ESP8266WiFi.h>
+#include <BlynkSimpleEsp8266.h>
+#endif //BOARD_NODEMCU
+#include "blynk.h"
+#include "BlynkProvisioning.h"
+#endif //BLYNK
+#ifdef JOY_OLED
+#include <MenuSystem.h>
+#include "menu.h"
+#endif
 
-Atm_led pump_relais;
+Atm_bit pump_relais;
 Atm_bit pump_bit;
 Atm_bit pump_test_bit;
-// Atm_digital water_sensor;
-// Atm_button water_sensor;
-// Atm_analog water_sensor;
 Atm_controller pump_controller;
 Atm_timer pumpOn_timer;
 Atm_timer pumpOff_timer;
+#ifdef JOY_OLED
 Atm_timer display_timer;
+#endif
+#ifdef ENABLE_SONIC
+Atm_timer sonic_timer;
+Ultrasonic ultrasonic(sonicPin);
+#endif
+#ifdef ENABLE_SUNLIGHT
+SI114X SunSensor = SI114X();
+Atm_timer sunlight_init_timer;
+Atm_timer sunlight_timer;
+#endif
+// #ifdef BLYNK
+// Atm_timer blynk_timer;
+// #endif
+#ifdef JOY_OLED
 Atm_comparator joyX_comp;
 Atm_comparator joyY_comp;
-// Atm_button upBtn_button;
+#endif
+
+void sonicWrite();
 
 void pump_controller_onTrue(int idx, int v, int up);
 
@@ -36,11 +66,17 @@ void drawIntLabel(unsigned char row, const char *label, int value = 0, bool indi
 
 void drawDisplay();
 
+#ifdef JOY_OLED
 void display_onTimer(int idx, int v, int up);
+#endif
+void sonic_onTimer(int idx, int v, int up);
+
+void write_tankLevel();
 
 static uint16_t joy_threshold_list[] =
   { 400, 600, 900 };
 
+#ifdef JOY_OLED
 void joystick_onUp(/* arguments */);
 void joystick_onDown(/* arguments */);
 void joystick_onLeft(/* arguments */);
@@ -56,6 +92,7 @@ void mu_pump_reset_onSelect(MenuComponent* p_menu_component);
 void mu_pump_test_onSelect(MenuComponent* p_menu_component);
 void mu_water_enable_onSelect(MenuComponent* p_menu_component);
 void mu_water_simulate_onSelect(MenuComponent* p_menu_component);
+#endif
 
 void setup();
 
