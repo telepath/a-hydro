@@ -15,12 +15,12 @@
 #define ENABLE_OTA
 #define SERIAL_DEBUG
 #define APP_DEBUG
-#define BLYNK_PRINT Serial
-#define DEBUG(ARG) Serial.print(ARG)
-#define DEBUGLN(ARG) Serial.println(ARG)
-// #define BLYNK_PRINT terminal
-// #define DEBUG(ARG) terminal.print(ARG)
-// #define DEBUGLN(ARG) terminal.println(ARG)
+// #define BLYNK_PRINT Serial
+// #define DEBUG(ARG) Serial.print(ARG)
+// #define DEBUGLN(ARG) Serial.println(ARG)
+#define BLYNK_PRINT terminal
+#define DEBUG(ARG) terminal.print(ARG)
+#define DEBUGLN(ARG) terminal.println(ARG)
 #include <Arduino.h>
 #include "Settings.h" // Custom BlynkProvisioning settings
 
@@ -109,9 +109,9 @@ WidgetTerminal terminal(TERMINAL);  // Comment this out if you won't use the ter
 
 #define joyXPin A1
 #define joyYPin joyXPin+1
+bool joyInvert = false;
 
 #define moisturePin A0
-bool joyInvert = false;
 
 int sonicSeconds = 30;
 int sonicSecondsFast = 10;

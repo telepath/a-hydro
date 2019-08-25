@@ -77,10 +77,10 @@ BLYNK_READ_DEFAULT()
     value = pump_relais.state();
   } else if (pin==LIGHT_IR) {
     if (value = SunSensor.ReadIR()) {
-      if (value > 5000) {
-        DEBUG(F("Value "))
-        DEBUG(value)
-        DEBUGLN(F(" is discarded"))
+      if (value > 65000) {
+        DEBUG(F("Value "));
+        DEBUG(value);
+        DEBUGLN(F(" is discarded"));
         value = -1;
       }
     } else {
@@ -91,18 +91,18 @@ BLYNK_READ_DEFAULT()
     }
   } else if (pin==LIGHT_VS) {
     value = SunSensor.ReadVisible();
-    if (value > 5000) {
-      DEBUG(F("Value "))
-      DEBUG(value)
-      DEBUGLN(F(" is discarded"))
+    if (value > 65000) {
+      DEBUG(F("Value "));
+      DEBUG(value);
+      DEBUGLN(F(" is discarded"));
       value = -1;
     }
   } else if (pin==LIGHT_UV) {
     value = SunSensor.ReadUV() / 100.0;
-    if (value > 50) {
-      DEBUG(F("Value "))
-      DEBUG(value)
-      DEBUGLN(F(" is discarded"))
+    if (value > 650) {
+      DEBUG(F("Value "));
+      DEBUG(value);
+      DEBUGLN(F(" is discarded"));
       value = -1;
     }
   } else if (pin==MOISTURE) {
