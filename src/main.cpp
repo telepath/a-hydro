@@ -52,7 +52,7 @@ ESP8266 wifi(&EspSerial);
 BLYNK_READ_DEFAULT()
 {
   int pin = request.pin;      // Which exactly pin is handled?
-  int value = 0;
+  int value = -1;
   if (pin==SONIC) {
     write_tankLevel();
   } else if (pin==PUMP_TIME) {
@@ -78,6 +78,9 @@ BLYNK_READ_DEFAULT()
   } else if (pin==LIGHT_IR) {
     if (value = SunSensor.ReadIR()) {
       if (value > 5000) {
+        DEBUG(F("Value "))
+        DEBUG(value)
+        DEBUGLN(F(" is discarded"))
         value = -1;
       }
     } else {
@@ -89,17 +92,24 @@ BLYNK_READ_DEFAULT()
   } else if (pin==LIGHT_VS) {
     value = SunSensor.ReadVisible();
     if (value > 5000) {
+      DEBUG(F("Value "))
+      DEBUG(value)
+      DEBUGLN(F(" is discarded"))
       value = -1;
     }
   } else if (pin==LIGHT_UV) {
     value = SunSensor.ReadUV() / 100.0;
     if (value > 50) {
+      DEBUG(F("Value "))
+      DEBUG(value)
+      DEBUGLN(F(" is discarded"))
       value = -1;
     }
   } else if (pin==MOISTURE) {
     value = analogRead(moisturePin);
   }
-  vWrite(pin, value);
+  if (value != -1)
+    vWrite(pin, value);
 }
 
 BLYNK_WRITE_DEFAULT()
