@@ -1,5 +1,6 @@
 #include "main.h"
 #include <BlynkSimpleEsp8266.h>
+// #include <BlynkSimpleEsp8266_SSL.h>
 
 void vWrite(int pin, int value) {
   #ifdef BLYNK
@@ -13,6 +14,17 @@ void vWrite(int pin, int value) {
 }
 
 void vWrite(int pin, double value) {
+  #ifdef BLYNK
+  DEBUG(F("Write "));
+  DEBUG(value);
+  DEBUG(F(" to pin "));
+  DEBUG(pin);
+  DEBUGLN(F(""));
+  Blynk.virtualWrite(pin, value);
+  #endif
+}
+
+void vWrite(int pin, const char* value) {
   #ifdef BLYNK
   DEBUG(F("Write "));
   DEBUG(value);
@@ -141,7 +153,77 @@ BLYNK_WRITE_DEFAULT()
     } else {
       pump_test_bit.on();
     }
+  } else if (pin==SETTINGS_OTA_VERSION) {
+    checkUpdate();
   }
+}
+
+void disableUpdateButton(){
+  Blynk.setProperty(SETTINGS_OTA_UPDATE, "color", BLYNK_WHITE);
+  Blynk.setProperty(SETTINGS_OTA_UPDATE, "onBackColor", BLYNK_WHITE);
+  Blynk.setProperty(SETTINGS_OTA_UPDATE, "offBackColor", BLYNK_WHITE);
+}
+
+void enableUpdateButton(){
+  Blynk.setProperty(SETTINGS_OTA_UPDATE, "color", BLYNK_WHITE);
+  Blynk.setProperty(SETTINGS_OTA_UPDATE, "onBackColor", BLYNK_GREEN);
+  Blynk.setProperty(SETTINGS_OTA_UPDATE, "offBackColor", BLYNK_GREEN);
+}
+
+bool checkUpdate() {
+  DEBUGLN(F("Checking for update"));
+  HTTPClient http;
+  http.begin(OTA_VERSION_URL);
+  int r = http.GET();
+  if ((r > 0) && (http.getString().length() > 0)) {
+    pinParams[SETTINGS_OTA_VERSION] = http.getString().c_str();
+    DEBUG(F("Version found: "));
+    DEBUGLN(http.getString().c_str());
+    // DEBUGLN(pinParams[SETTINGS_OTA_VERSION].asStr());
+    // vWrite(SETTINGS_OTA_VERSION, pinParams[SETTINGS_OTA_VERSION]);
+    // if (pinParams[SETTINGS_OTA_VERSION].asStr() > BOARD_FIRMWARE_VERSION ) {
+    //   DEBUG(pinParams[SETTINGS_OTA_VERSION].asStr());
+    //   DEBUG(F(" is newer than installed "));
+    //   DEBUGLN(F(BOARD_FIRMWARE_VERSION));
+    //   enableUpdateButton();
+    //   return true;
+    // } else {
+    //   DEBUG(pinParams[SETTINGS_OTA_VERSION].asStr());
+    //   DEBUG(F(" is not newer than installed "));
+    //   DEBUGLN(F(BOARD_FIRMWARE_VERSION));
+    //   disableUpdateButton();
+    // }
+  } else {
+    DEBUG(F("Error checking for new version: "));
+    DEBUGLN(r);
+    Blynk.setProperty(SETTINGS_OTA_VERSION, "color", BLYNK_RED);
+    disableUpdateButton();
+  }
+  return false;
+}
+
+BLYNK_WRITE(SETTINGS_OTA_UPDATE) {
+  if (param.asInt() != 0 && checkUpdate()) {
+    overTheAirURL = OTA_BIN_URL;
+    overTheAirURL.concat("/");
+    overTheAirURL.concat(pinParams[SETTINGS_OTA_VERSION].asStr());
+    overTheAirURL.concat("/");
+    overTheAirURL.concat(OTA_FILE_NAME);
+    DEBUGLN(F("Starting OTA update from "));
+    DEBUGLN(overTheAirURL);
+    Blynk.setProperty(SETTINGS_OTA_UPDATE, "offBackColor", BLYNK_BLUE);
+
+    // Disconnect, not to interfere with OTA process
+    // Blynk.disconnect();
+
+    // Start OTA
+    // BlynkState::set(MODE_OTA_UPGRADE);
+    DEBUGLN(F("Update would have started!"));
+    delay(500);
+  } else {
+    Blynk.setProperty(SETTINGS_OTA_UPDATE, "offBackColor", BLYNK_RED);
+  }
+
 }
 
 void blynk_writeConfig() {
@@ -152,6 +234,8 @@ void blynk_writeConfig() {
   vWrite(SETTINGS_TANK_EMPTY, tankEmpty);
   vWrite(SETTINGS_TANK_FULL, tankFull);
   vWrite(PUMP_STATE, 0);
+  vWrite(VERSION, BOARD_FIRMWARE_VERSION);
+  vWrite(SETTINGS_OTA_VERSION, "");
 }
 
 BLYNK_CONNECTED() {

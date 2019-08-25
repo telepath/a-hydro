@@ -4,8 +4,16 @@
 #ifndef SETTINGS_H
 #define SETTINGS_H
 
+#define BLYNK_PORT                    80
+
 #define BOARD_FIRMWARE_VERSION        "1.0.1"
 #define BOARD_HARDWARE_VERSION        "1.0.0"
+
+// TODO: This sucks.
+#define OTA_FINGERPRINT               "CC:AA:48:48:66:46:0E:91:53:2C:9C:7C:23:2A:B1:74:4D:29:9D:33"
+#define OTA_VERSION_URL               "https://raw.githubusercontent.com/telepath/a-hydro/master/ver.txt"
+#define OTA_BIN_URL                   "https://github.com/telepath/a-hydro/releases/download"
+#define OTA_FILE_NAME                 "firmware.bin"
 
 #define BOARD_NAME                    "Tribal Tides"        // Name of your product. Should match App Export request info.
 #define BOARD_VENDOR                  "Tribeshouse UG"        // Name of your company. Should match App Export request info.
@@ -84,7 +92,7 @@
 #define BLYNK_YELLOW    "#ED9D00"
 #define BLYNK_RED       "#D3435C"
 #define BLYNK_DARK_BLUE "#5F7CD8"
-
+#define BLYNK_WHITE     "#FFFFFF"
 
 /*
  * Advanced options

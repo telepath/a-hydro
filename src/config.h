@@ -4,6 +4,7 @@
 #ifdef BOARD_NODEMCU
 #include <Arduino.h>
 #include <BlynkSimpleEsp8266.h>
+// #include <BlynkSimpleEsp8266_SSL.h>
 
 #define BLYNK
 #define USE_NODE_MCU_BOARD
@@ -13,6 +14,14 @@
 #define ENABLE_OTA
 #define SERIAL_DEBUG
 
+#define APP_DEBUG
+#define BLYNK_PRINT Serial
+#define DEBUG(ARG) Serial.print(ARG)
+#define DEBUGLN(ARG) Serial.println(ARG)
+// #define BLYNK_PRINT terminal
+// #define DEBUG(ARG) terminal.print(ARG)
+// #define DEBUGLN(ARG) terminal.println(ARG)
+#include <Arduino.h>
 #include "Settings.h" // Custom BlynkProvisioning settings
 
 #endif //BOARD_NODEMCU
@@ -74,8 +83,8 @@
     LIGHT_IR,       //vPin 3
     LIGHT_VS,       //vPin 4
     LIGHT_UV,       //vPin 5
-    EMPTY1,         //vPin 6
     EMPTY2,         //vPin 7
+    VERSION,        //vPin 6
     EMPTY3,         //vPin 8
     TERMINAL,       //vPin 9
     SETTINGS_SONIC_SECONDS, //vPin 10
@@ -84,15 +93,13 @@
     SETTINGS_PUMP_OFF_SEC,  //vPin 13
     SETTINGS_TANK_EMPTY,    //vPin 14
     SETTINGS_TANK_FULL,     //vPin 15
+    SETTINGS_OTA_VERSION,   //vPin 16
+    SETTINGS_OTA_UPDATE,    //vPin 17
     PIN_NUM         //last item, number of pins
   };
 #endif
 
 WidgetTerminal terminal(TERMINAL);  // Comment this out if you won't use the terminal widget
-
-#define BLYNK_PRINT terminal
-#define DEBUG(ARG) terminal.print(ARG)
-#define DEBUGLN(ARG) terminal.println(ARG)
 
 // digital pins
 #define pumpPin D3

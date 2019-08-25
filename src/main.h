@@ -17,6 +17,7 @@
 #ifdef BOARD_NODEMCU
 #include <ESP8266WiFi.h>
 #include <BlynkSimpleEsp8266.h>
+// #include <BlynkSimpleEsp8266_SSL.h>
 #endif //BOARD_NODEMCU
 #include "blynk.h"
 #include "BlynkProvisioning.h"
@@ -65,6 +66,8 @@ void pumpOff_onTimer(int idx, int v, int up);
 void drawIntLabel(unsigned char row, const char *label, int value = 0, bool indicator=false);
 
 void drawDisplay();
+
+bool checkUpdate();
 
 #ifdef JOY_OLED
 void display_onTimer(int idx, int v, int up);
