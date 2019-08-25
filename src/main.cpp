@@ -77,7 +77,7 @@ BLYNK_READ_DEFAULT()
     value = pump_relais.state();
   } else if (pin==LIGHT_IR) {
     if (value = SunSensor.ReadIR()) {
-      if (value > 65000) {
+      if (value > 5000) {
         value = -1;
       }
     } else {
@@ -88,14 +88,16 @@ BLYNK_READ_DEFAULT()
     }
   } else if (pin==LIGHT_VS) {
     value = SunSensor.ReadVisible();
-    if (value > 65000) {
+    if (value > 5000) {
       value = -1;
     }
   } else if (pin==LIGHT_UV) {
     value = SunSensor.ReadUV() / 100.0;
-    if (value > 650) {
+    if (value > 50) {
       value = -1;
     }
+  } else if (pin==MOISTURE) {
+    value = analogRead(moisturePin);
   }
   vWrite(pin, value);
 }
@@ -613,7 +615,7 @@ void setup() {
   #ifdef ENABLE_SUNLIGHT
   DEBUGLN(F("sunlight_init_timer.begin"));
   sunlight_init_timer.begin()
-    .interval_millis(5000)
+    .interval_millis(60000)
     .repeat(ATM_COUNTER_OFF)
     .onTimer(sunlight_init_onTimer)
     .start();

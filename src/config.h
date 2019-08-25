@@ -10,10 +10,10 @@
 #define USE_NODE_MCU_BOARD
 #define ENABLE_SONIC
 #define ENABLE_SUNLIGHT
-#define BOARD_LED_BUTTON
+// #define BOARD_LED_BUTTON
+#define BOARD_CHAINABLE_LED
 #define ENABLE_OTA
 #define SERIAL_DEBUG
-
 #define APP_DEBUG
 #define BLYNK_PRINT Serial
 #define DEBUG(ARG) Serial.print(ARG)
@@ -83,8 +83,8 @@
     LIGHT_IR,       //vPin 3
     LIGHT_VS,       //vPin 4
     LIGHT_UV,       //vPin 5
-    EMPTY2,         //vPin 7
     VERSION,        //vPin 6
+    MOISTURE,       //vPin 7
     EMPTY3,         //vPin 8
     TERMINAL,       //vPin 9
     SETTINGS_SONIC_SECONDS, //vPin 10
@@ -102,13 +102,15 @@
 WidgetTerminal terminal(TERMINAL);  // Comment this out if you won't use the terminal widget
 
 // digital pins
-#define pumpPin D3
+#define pumpPin D6
 // int waterPin = 2;
 // int upBtnPin = 8;
-#define sonicPin D8
+#define sonicPin D5
 
-#define joyXPin A0
+#define joyXPin A1
 #define joyYPin joyXPin+1
+
+#define moisturePin A0
 bool joyInvert = false;
 
 int sonicSeconds = 30;
