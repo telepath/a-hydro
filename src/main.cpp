@@ -4,34 +4,58 @@
 
 void vWrite(int pin, int value) {
   #ifdef BLYNK
-  DEBUG(F("Write "));
-  DEBUG(value);
-  DEBUG(F(" to pin "));
-  DEBUG(pin);
-  DEBUGLN(F(""));
-  Blynk.virtualWrite(pin, value);
+  if (value != -1) {
+    DEBUG(F("Write "));
+    DEBUG(value);
+    DEBUG(F(" to pin "));
+    DEBUG(pin);
+    DEBUGLN(F(""));
+    Blynk.virtualWrite(pin, value);
+  } else {
+    DEBUG(F("Value "));
+    DEBUG(value);
+    DEBUG(F(" for pin "));
+    DEBUG(pin);
+    DEBUGLN(F(" is discarded"));
+  }
   #endif
 }
 
 void vWrite(int pin, double value) {
   #ifdef BLYNK
-  DEBUG(F("Write "));
-  DEBUG(value);
-  DEBUG(F(" to pin "));
-  DEBUG(pin);
-  DEBUGLN(F(""));
-  Blynk.virtualWrite(pin, value);
+  if (value != -1.0) {
+    DEBUG(F("Write "));
+    DEBUG(value);
+    DEBUG(F(" to pin "));
+    DEBUG(pin);
+    DEBUGLN(F(""));
+    Blynk.virtualWrite(pin, value);
+  } else {
+    DEBUG(F("Value "));
+    DEBUG(value);
+    DEBUG(F(" for pin "));
+    DEBUG(pin);
+    DEBUGLN(F(" is discarded"));
+  }
   #endif
 }
 
 void vWrite(int pin, const char* value) {
   #ifdef BLYNK
-  DEBUG(F("Write "));
-  DEBUG(value);
-  DEBUG(F(" to pin "));
-  DEBUG(pin);
-  DEBUGLN(F(""));
-  Blynk.virtualWrite(pin, value);
+  if (*value != -1) {
+    DEBUG(F("Write "));
+    DEBUG(value);
+    DEBUG(F(" to pin "));
+    DEBUG(pin);
+    DEBUGLN(F(""));
+    Blynk.virtualWrite(pin, value);
+  } else {
+    DEBUG(F("Value "));
+    DEBUG(value);
+    DEBUG(F(" for pin "));
+    DEBUG(pin);
+    DEBUGLN(F(" is discarded"));
+  }
   #endif
 }
 
@@ -76,35 +100,11 @@ BLYNK_READ_DEFAULT()
   } else if (pin==PUMP_STATE) {
     value = pump_relais.state();
   } else if (pin==LIGHT_IR) {
-    if (value = SunSensor.ReadIR()) {
-      if (value > 65000) {
-        DEBUG(F("Value "));
-        DEBUG(value);
-        DEBUGLN(F(" is discarded"));
-        value = -1;
-      }
-    } else {
-      if (sunlight_init_timer.state() == sunlight_init_timer.IDLE) {
-        DEBUGLN(F("reinitialize sunlight sensor"));
-        sunlight_init_timer.start();
-      }
-    }
+    sunlight_readIR();
   } else if (pin==LIGHT_VS) {
-    value = SunSensor.ReadVisible();
-    if (value > 65000) {
-      DEBUG(F("Value "));
-      DEBUG(value);
-      DEBUGLN(F(" is discarded"));
-      value = -1;
-    }
+    sunlight_readVisible();
   } else if (pin==LIGHT_UV) {
-    value = SunSensor.ReadUV() / 100.0;
-    if (value > 650) {
-      DEBUG(F("Value "));
-      DEBUG(value);
-      DEBUGLN(F(" is discarded"));
-      value = -1;
-    }
+    sunlight_readUV();
   } else if (pin==MOISTURE) {
     value = analogRead(moisturePin);
   }
@@ -400,12 +400,44 @@ void sunlight_init_onTimer(int idx, int v, int up){
   }
 }
 
+void sunlight_readIR(){
+  DEBUGLN(F("sunlight_readIR"));
+  int value = -1;
+  if (value = SunSensor.ReadIR()) {
+    if (value < 65000) {
+      vWrite(LIGHT_IR, value);
+    }
+  } else {
+    if (sunlight_init_timer.state() == sunlight_init_timer.IDLE) {
+      DEBUGLN(F("reinitialize sunlight sensor"));
+      sunlight_init_timer.start();
+    }
+  }
+
+}
+void sunlight_readVisible(){
+  DEBUGLN(F("sunlight_readVisible"));
+  int value = SunSensor.ReadVisible();
+  if (value < 65000) {
+    vWrite(LIGHT_VS, value);
+  }
+
+}
+void sunlight_readUV(){
+  DEBUGLN(F("sunlight_readUV"));
+  double value = SunSensor.ReadUV() / 100.0;
+  if (value < 650) {
+    vWrite(LIGHT_UV, value);
+  }
+}
+
 void sunlight_onTimer(int idx, int v, int up){
   DEBUGLN(F("sunlight_onTimer"));
-  vWrite(LIGHT_IR, SunSensor.ReadIR());
-  vWrite(LIGHT_VS, SunSensor.ReadVisible());
-  vWrite(LIGHT_UV, SunSensor.ReadUV() / 100.0);
+  sunlight_readIR();
+  sunlight_readVisible();
+  sunlight_readUV();
 }
+
 #endif
 
 // void joystick_onUp(/* arguments */) {

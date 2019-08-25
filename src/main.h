@@ -76,6 +76,10 @@ void sonic_onTimer(int idx, int v, int up);
 
 void write_tankLevel();
 
+void sunlight_readIR();
+void sunlight_readVisible();
+void sunlight_readUV();
+
 static uint16_t joy_threshold_list[] =
   { 400, 600, 900 };
 
