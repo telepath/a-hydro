@@ -71,7 +71,6 @@
 #endif
 
 #ifndef SERIAL_DEBUG
-
   #define DEBUG
   #define DEBUGLN
 #endif
@@ -112,7 +111,8 @@ WidgetTerminal terminal(TERMINAL);  // Comment this out if you won't use the ter
   #define joyXPin A0
   #define joyYPin joyXPin+1
   bool joyInvert = false;
-#elifdef ENABLE_MOISTURE
+#endif
+#ifdef ENABLE_MOISTURE
   #define moisturePin A0
 #endif //JOY_OLED
 
@@ -120,7 +120,11 @@ int sonicSeconds = 30;
 int sonicSecondsFast = 10;
 
 int blynkMillis = 1000;
+
 int sunlightSeconds = 60;
+int sunlightIRMax = 50000;
+int sunlightVisibleMax = 10000;
+double sunlightUVMax = 50.0;
 
 int tankFull = 5;
 int tankEmpty = 50;

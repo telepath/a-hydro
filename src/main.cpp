@@ -427,7 +427,7 @@ void sunlight_readIR(){
   DEBUGLN(F("sunlight_readIR"));
   int value = -1;
   if (value = SunSensor.ReadIR()) {
-    if (value < 65000) {
+    if (value < sunlightIRMax) {
       vWrite(LIGHT_IR, value);
     }
   } else {
@@ -441,7 +441,7 @@ void sunlight_readIR(){
 void sunlight_readVisible(){
   DEBUGLN(F("sunlight_readVisible"));
   int value = SunSensor.ReadVisible();
-  if (value < 65000) {
+  if (value < sunlightVisibleMax) {
     vWrite(LIGHT_VS, value);
   }
 
@@ -449,7 +449,7 @@ void sunlight_readVisible(){
 void sunlight_readUV(){
   DEBUGLN(F("sunlight_readUV"));
   double value = SunSensor.ReadUV() / 100.0;
-  if (value < 650) {
+  if (value < sunlightUVMax) {
     vWrite(LIGHT_UV, value);
   }
 }
