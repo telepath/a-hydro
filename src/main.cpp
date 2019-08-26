@@ -75,46 +75,62 @@ ESP8266 wifi(&EspSerial);
 
 BLYNK_READ_DEFAULT()
 {
-  int pin = request.pin;      // Which exactly pin is handled?
+  int pin = request.pin;      // Which pin is handled?
   int value = -1;
   if (pin==SONIC) {
     write_tankLevel();
-  } else if (pin==PUMP_TIME) {
+  }
+  else if (pin==PUMP_TIME) {
     if (pump_bit.state()) {
       value = pumpOff_timer.left()/1000;
     } else {
       value = pumpOn_timer.left()/1000;
     }
-  } else if (pin==SETTINGS_TANK_FULL) {
+  }
+  else if (pin==SETTINGS_TANK_FULL) {
     value = tankFull;
-  } else if (pin==SETTINGS_TANK_EMPTY) {
+  }
+  else if (pin==SETTINGS_TANK_EMPTY) {
     value = tankEmpty;
-  } else if (pin==SETTINGS_BLYNK_MILLIS) {
+  }
+  else if (pin==SETTINGS_BLYNK_MILLIS) {
     value = blynkMillis;
-  } else if (pin==SETTINGS_PUMP_ON_MIN) {
+  }
+  else if (pin==SETTINGS_PUMP_ON_MIN) {
     value = pumpOnSeconds / 60;
-  } else if (pin==SETTINGS_SONIC_SECONDS) {
+  }
+  else if (pin==SETTINGS_SONIC_SECONDS) {
     value = sonicSeconds;
-  } else if (pin==SETTINGS_PUMP_OFF_SEC) {
+  }
+  else if (pin==SETTINGS_PUMP_OFF_SEC) {
     value = pumpOffSeconds;
-  } else if (pin==PUMP_STATE) {
+  }
+  else if (pin==PUMP_STATE) {
     value = pump_relais.state();
-  } else if (pin==LIGHT_IR) {
+  }
+  #ifdef ENABLE_SUNLIGHT
+  else if (pin==LIGHT_IR) {
     sunlight_readIR();
-  } else if (pin==LIGHT_VS) {
+  }
+  else if (pin==LIGHT_VS) {
     sunlight_readVisible();
-  } else if (pin==LIGHT_UV) {
+  }
+  else if (pin==LIGHT_UV) {
     sunlight_readUV();
-  } else if (pin==MOISTURE) {
+  }
+  #endif //ENABLE_SUNLIGHT
+  #ifdef ENABLE_MOISTURE
+  else if (pin==MOISTURE) {
     value = analogRead(moisturePin);
   }
+  #endif //ENABLE_MOISTURE
   if (value != -1)
     vWrite(pin, value);
 }
 
 BLYNK_WRITE_DEFAULT()
 {
-  int pin = request.pin;      // Which exactly pin is handled?
+  int pin = request.pin;      // Which pin is handled?
   DEBUG(F("Received "));
   DEBUG(param.asString());
   DEBUG(F(" on pin "));
@@ -124,17 +140,20 @@ BLYNK_WRITE_DEFAULT()
   if (pin==SETTINGS_TANK_FULL) {
     tankFull = param.asInt();
     Blynk.setProperty(SONIC, "max", tankFull);
-  } else if (pin==SETTINGS_TANK_EMPTY) {
+  }
+  else if (pin==SETTINGS_TANK_EMPTY) {
     tankEmpty = param.asInt();
     write_tankLevel();
     Blynk.setProperty(SONIC, "min", tankEmpty);
-  } else if (pin==SETTINGS_BLYNK_MILLIS) {
+  }
+  else if (pin==SETTINGS_BLYNK_MILLIS) {
     blynkMillis = param.asInt();
     write_tankLevel();
     #ifdef BLYNK
     // blynk_timer.interval_seconds((uint32_t)blynkMillis);
     #endif
-  } else if (pin==SETTINGS_PUMP_ON_MIN) {
+  }
+  else if (pin==SETTINGS_PUMP_ON_MIN) {
     pumpOnSeconds = param.asInt() * 60.0;
     if (pumpOnSeconds <=0 ) {
       pumpOn_timer.stop();
@@ -144,12 +163,14 @@ BLYNK_WRITE_DEFAULT()
         pumpOn_timer.start();
       }
     }
-  } else if (pin==SETTINGS_SONIC_SECONDS) {
+  }
+  else if (pin==SETTINGS_SONIC_SECONDS) {
     sonicSeconds = param.asInt();
     #ifdef ENABLE_SONIC
     sonic_timer.interval_seconds(sonicSeconds);
     #endif
-  } else if (pin==SETTINGS_PUMP_OFF_SEC) {
+  }
+  else if (pin==SETTINGS_PUMP_OFF_SEC) {
     pumpOffSeconds = param.asDouble();
     if (pumpOffSeconds <= 0 ) {
       pumpOff_timer.stop();
@@ -159,13 +180,15 @@ BLYNK_WRITE_DEFAULT()
         pumpOff_timer.start();
       }
     }
-  } else if (pin==PUMP_STATE) {
+  }
+  else if (pin==PUMP_STATE) {
     if (param.asInt()==0) {
       pump_test_bit.off();
     } else {
       pump_test_bit.on();
     }
-  } else if (pin==SETTINGS_OTA_VERSION) {
+  }
+  else if (pin==SETTINGS_OTA_VERSION) {
     checkUpdate();
   }
 }

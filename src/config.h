@@ -10,6 +10,7 @@
 #define USE_NODE_MCU_BOARD
 #define ENABLE_SONIC
 #define ENABLE_SUNLIGHT
+#define ENABLE_MOISTURE
 // #define BOARD_LED_BUTTON
 #define BOARD_CHAINABLE_LED
 #define ENABLE_OTA
@@ -107,11 +108,13 @@ WidgetTerminal terminal(TERMINAL);  // Comment this out if you won't use the ter
 // int upBtnPin = 8;
 #define sonicPin D5
 
-#define joyXPin A1
-#define joyYPin joyXPin+1
-bool joyInvert = false;
-
-#define moisturePin A0
+#ifdef JOY_OLED
+  #define joyXPin A0
+  #define joyYPin joyXPin+1
+  bool joyInvert = false;
+#elifdef ENABLE_MOISTURE
+  #define moisturePin A0
+#endif //JOY_OLED
 
 int sonicSeconds = 30;
 int sonicSecondsFast = 10;
